@@ -33,8 +33,21 @@ def conv2d(input_, output_dim, kernel_h=3, kernel_w=None, stride_h=1, stride_w=N
 
     return conv
 
-def res_block():
-  pass
+def res_block(input_, name='res_block'):
+  shortcut = input_
+  num_input_c = shortcut.shape.as_list()[-1]
+
+  with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
+    conv = conv2d(input_, output_dim, name=name+'/conv1')
+    conv = tf.contrib.layers.instance_norm(conv)
+    conv = tf.nn.relu(conv)
+
+    conv = conv2d(conv, output_dim, name=name+'/conv2')
+    conv = tf.contrib.layers.instance_norm(conv)
+
+    conv = tf.identity(conv+shortcut, name='residual_block_output')
+
+  return conv
 
 def fc_layer(input_, output_dim, initializer = tf.truncated_normal_initializer(stddev=0.02), activation='linear', reuse=False, name=None):
   shape = input_.get_shape().as_list()
