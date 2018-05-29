@@ -48,6 +48,7 @@ def conv2d(input_, output_dim, kernel_h=3, kernel_w=None, stride_h=1, stride_w=N
 
     return conv
 
+<<<<<<< HEAD
 def deconv2d(input_, output_dim, kernel_h=3, kernel_w=None, stride_h=1, stride_w=None, padding='SAME', reuse=False, initializer=None, use_bias = True, name="deconv2d"):
   
   if kernel_w == None: kernel_w = kernel_h
@@ -70,6 +71,8 @@ def conv_block(x, nf, k, s, num_l, p='SAME', ntype=None):
   x = leak_relu(x)
   return x
 
+=======
+>>>>>>> 54029bf2cee109aa55c4c9337367b0de4702c15d
 def res_block(input_, output_dim, name='res_block', is_dropout=False, drop_p=0.5):
   shortcut = input_
   num_input_c = shortcut.shape.as_list()[-1]
@@ -114,6 +117,7 @@ def fc_layer(input_, output_dim, initializer = None, activation='linear', reuse=
       return tf.nn.tanh(result)
 
 
+<<<<<<< HEAD
 def generator(self, input, ngf=64, num_block=9, ntype='instance'):
   x = input
   count_l = 0 #counter of layer for naming layer
@@ -173,11 +177,29 @@ def discriminator(self, input, ndf=64, num_layer=3, ntype='batch'):
   with tf.variable_scope(name="discriminator", reuse=tf.AUTO_REUSE) as scope:
     with tf.variable_scope(name='h0', reuse=tf.AUTO_REUSE):
       x = leak_relu(conv2d(input, ndf, kernel_h=4, stride_h=2, name='d_h0_conv'))
+=======
+def define_G():
+  pass
+
+
+def discriminator(self, input, num_layer=3, ntype='batch', reuse=False, batch_size = None):
+  def discriminator_block(_x, nf, k, s, _name, p='SAME', _ntype=None):
+    _x = conv2d(_x, nf, kernel_h=k, kernel_h=s, name='d_'+str(_name)+'_conv')
+    if not _ntype == None:
+      _x = norm_layer(_x, _ntype)
+    _x = leak_relu(_x)
+    return _x
+
+  ndf = 64
+  with tf.variable_scope(name="discriminator", reuse=tf.AUTO_REUSE) as scope:
+    x = leak_relu(conv2d(input, ndf, kernel_h=4, stride_h=2, name='d_h0_conv'))
+>>>>>>> 54029bf2cee109aa55c4c9337367b0de4702c15d
     nf_mult, nf_mult_prev = 1,1
 
     #Iterative Add convolutional block: conv-norm-leak_relu
     for n in range(1,num_layer+1):
       nf_mult_prev, nf_mult = nf_mult, min(2**n, 8)
+<<<<<<< HEAD
       with tf.variable_scope(name='h'+str(n), reuse=tf.AUTO_REUSE) as scope:
         x = conv_block(x, ndf*nf_mult, k=4, s=2, num_l=n, nytpe=ntype)
 
@@ -192,5 +214,18 @@ def discriminator(self, input, ndf=64, num_layer=3, ntype='batch'):
       x = tf.contrib.layers.flatten(x)
       x = fc_layer(x, 1024, activation='tanh')
       x = fc_layer(x, 1, activation='sigmoid')
+=======
+      x = discriminator_block(x, ndf*nf_mult, k=4, s=2, _name=n, _nytpe=ntype)
+
+    nf_mult_prev, nf_mult = nf_mult, min(2**num_layer, 8)
+    #nf_mult_prev, nf_mult = nf_mult, min(2**(num_layer+1), 8)
+
+    x = discriminator_block(x, ndf*nf_mult, k=4, s=1, _name=num_layer+1, _ntype=ntype)
+    x = conv2d(ndf*nf_mult, 1, kernel_h=4, stride_h=1, name='d_out_conv')
+
+    x = tf.contrib.layers.flatten(x)
+    x = fc_layer(x, 1024, activation='tanh')
+    x = fc_layer(x, 1, activation='sigmoid')
+>>>>>>> 54029bf2cee109aa55c4c9337367b0de4702c15d
     
     return x
