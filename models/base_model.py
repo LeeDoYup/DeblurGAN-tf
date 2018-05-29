@@ -7,12 +7,13 @@ class BaseModel():
     def initialize(self, opt):
         self.opt = opt #arguments parser
         self.gpu_ids = opt.gpu_ids
-        self.istrain = opt.istrain 
+        self.is_training = opt.is_training
         #self.tensor = if self.gpu_ids else ... ## multiple gpu tensor
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)
 
-    def create_input_placeholder(self, input):
-        self.input = input
+    @staticmethod
+    def create_input_placeholder(self, shape=None, name='input'):
+        pass
 
     def forward(self):
         #forward pass of networks
@@ -55,5 +56,3 @@ class BaseModel():
         network.load_state_dict(torch.load(save_path))
 
     
-
-
