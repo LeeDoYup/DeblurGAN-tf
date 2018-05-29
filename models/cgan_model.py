@@ -21,4 +21,8 @@ class cgan(BaseModel):
         self.D = discriminator(self.input['gen_img'])
         self.G = generator(self.input['blur_img'])
 
+    def create_loss(self):
+        self.adv_loss = None
+        self.perceptual_loss = None
+
 
