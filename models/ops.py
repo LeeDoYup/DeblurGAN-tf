@@ -7,18 +7,26 @@ def concat(tensors, axis, *args, **kwargs):
   return tf.concat(tensors, axis, *args, **kwargs)
 
 
-def adv_loss(logit):
-  #loss = sum of (-discriminative loss of blurred image)
-  #return loss
-  pass
+def adv_loss(sigm):
+  '''
+  args: shape = [batch_size, 1]: it means the discriminator predict the sample is real.
+  '''
+  loss = tf.reduce_sum(-1*sigm)
+  return loss
 
-def perceptual_loss(fake_img_feat, real_img_feat):
+def perceptual_loss(gen_img, real_img):
   '''
   It have to input vgg feature of generated image & real_img_feat
   '''
-  #Calculate the feature difference of fake_img & real_img faeture
-  #return loss
-  #pass
+  vgg19 = tf.keras.applications.vgg19(include_top=False, weights='imagenet')
+  loss_model = Model(input=vgg19.input, output=vgg19.get_layer('block3_conv3').output)
+  loss_model.trainable=False
+  #average with width, height
+  loss =  tf.reduce_mean(tf.square(loss_model(gen_img)-loss_model(real_img)),axis=[1,2])
+  
+  #sum with channel
+  loss = tf.reduce_sum(loss, axis=-1)
+  return loss
 
 def norm_layer(input, ntype='instance', **kargs):
   if ntype == 'instance':
@@ -63,11 +71,12 @@ def deconv2d(input_, output_dim, kernel_h=3, kernel_w=None, stride_h=1, stride_w
   return conv
 
 
-def conv_block(x, nf, k, s, num_l, p='SAME', ntype=None):
-  x = conv2d(x, nf, kernel_h=k, kernel_h=s, name='conv')
-  if not ntype == None:
-    x = norm_layer(x, ntype)
-  x = leak_relu(x)
+def conv_block(x, nf, k, s, num_l, p='SAME', ntype=None, name='conv_block'):
+  with tf.variable_scope(name, reuse=tf.AUTO_REUSE) as scope:
+    x = conv2d(x, nf, kernel_h=k, kernel_h=s, name='conv')
+    if not ntype == None:
+      x = norm_layer(x, ntype)
+    x = leak_relu(x)
   return x
 
 
@@ -166,7 +175,6 @@ def generator(self, input, ngf=64, num_block=9, ntype='instance'):
 
     output = tf.add([x, input])/2.0
     return output
-
 
 
 def discriminator(self, input, ndf=64, num_layer=3, ntype='batch'):

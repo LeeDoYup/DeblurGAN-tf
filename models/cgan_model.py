@@ -15,14 +15,16 @@ class cgan(BaseModel):
     def create_input_placeholder(self, input):
         self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=None),
             'real_img': tf.placeholder(dtype=tf.float32, shape=None),
-            'gen_img': tf.placeholder(dtype=tf.float32, shape=None)}
+            'gen_img': tf.placeholder(dtype=tf.float32, shape=None)
+            }
 
     def build_model(self):
         self.D = discriminator(self.input['gen_img'])
         self.G = generator(self.input['blur_img'])
 
-    def create_loss(self):
-        self.adv_loss = None
-        self.perceptual_loss = None
+    def create_loss(self, regularizer = 100):
+        self.adv_loss = adv_loss(self.D)
+        self.perceptual_loss = perceptual_loss([self.input['blur_img'], self.input['gen_img']]) #vgg19 feature have to be calculated
+        self.loss = self.adv_loss + regularizer * self.perceptual_loss
 
 
