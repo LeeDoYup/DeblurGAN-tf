@@ -39,8 +39,28 @@ class cgan(object):
         if self.args.is_training:
             self.D = discriminator(self.input['gen_img'])
             self.create_loss()
-            self.optim_g = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G)
-            self.optim_d = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D)
+            self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G)
+            self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D)
+
+    def run_optim_G(self, feed_dict, with_loss=True):
+        _, loss_G, adv_loss, perceptual_loss = self.sess.run(
+            [self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss],
+            feed_dict=feed_dict)
+
+        if with_loss:
+            return loss_G, adv_loss, perceptual_loss
+        else:
+            return
+
+    def run_optim_D(self, feed_dict, with_loss=True):
+        _, loss_D= self.sess.run([self.optim_D, self.loss_D],
+            feed_dict=feed_dict)
+
+        if with_loss:
+            return loss_D
+        else:
+            return
+
 
 
     def create_loss(self, regularizer = 100):
@@ -72,7 +92,6 @@ class cgan(object):
         else:
             print(" [*] Success to read {}".format(ckpt_name))
             return False, 0
-
 
 
 
