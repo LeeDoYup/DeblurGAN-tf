@@ -180,7 +180,6 @@ def discriminator(input, ndf=64, num_layer=3, ntype='batch'):
     with tf.variable_scope('h_out', reuse=tf.AUTO_REUSE) as scope:
       x = conv2d(x, ndf*nf_mult, kernel_h=4, stride_h=1, name='conv')
       x = tf.contrib.layers.flatten(x)
-      print(x)
       x = fc_layer(x, 1024, activation='tanh', name='fc1')
       x = fc_layer(x, 1, activation='sigmoid', name='output')
     

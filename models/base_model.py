@@ -5,11 +5,14 @@ class BaseModel():
         return 'BaseModel'
 
     def initialize(self, opt):
+        pass
+        '''
         self.opt = opt #arguments parser
         self.gpu_ids = opt.gpu_ids
         self.is_training = opt.is_training
         #self.tensor = if self.gpu_ids else ... ## multiple gpu tensor
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)
+        '''
 
     @staticmethod
     def create_input_placeholder(self, shape=None, name='input'):
@@ -54,5 +57,5 @@ class BaseModel():
         save_filename = '%s_net_%s.pth' % (epoch_label, network_label)
         save_path = os.path.join(self.save_dir, save_filename)
         network.load_state_dict(torch.load(save_path))
+    '''
 
-    
