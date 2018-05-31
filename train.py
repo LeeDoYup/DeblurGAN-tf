@@ -9,7 +9,7 @@ import tensorflow as tf
 import numpy as np 
 from models.cgan_model import cgan
 
-def lineaer_decay(initial=0.0001, step, start_step=150, end_step=300):
+def linear_decay(initial=0.0001, step, start_step=150, end_step=300):
     '''
     return decayed learning rate
     It becomes 0 at end_step
@@ -31,20 +31,21 @@ def ready_batch_data():
 
 def main(args):
     config = json.load(open(args.config), 'r')
-    #batch_num = int(args.epoch/args.batch_size)
-
     #assert batch_num == 
     #assume there is a batch data pair:
-    dataset = data_loader.load_data() #have te be developed
+    dataset = data_loader.load_data(args.data_path) #have te be developed
     #dataset = [num_dataset, ]
     num_dataset = len(dataset)
+    num_batch = num_dataset/args.batch_num
     sess = tf.Session()
     model = cgan(sess,args)
     model.build_model()
 
 
     for iter in range(args.epoch):
+        batch_loss_G, batch_loss_D = 0.0 ,0.0
         for i, data in enumerate(dataset):
+            learning_rate = linear_decay(0.0001, iter)
             start_time = time.time()
             feed_dict_D = {model.input['blur_img']: data.blur_img,
                         model.input['real_img']: data.real_img,
@@ -53,14 +54,20 @@ def main(args):
             for j in range(args.iter_gen):
                 loss_G, adv_loss, perceptual_loss = 
                     model.run_optim_G(feed_dict=feed_dict_G, with_loss=True)
-                #logging
+                batch_loss_G +=loss_G
+                #logging: time, loss
+
             for j in range(args.iter_gen):
                 loss_D = model.run_optim_G(feed_dict=feed_dict_D, with_loss=True)
-                #logging
+                batch_loss_D +=loss_D
+                #logging: time, loss
 
             batch_time = time.time() - start_time
+            #logging
 
-
+        batch_loss_G /= num_batch
+        batch_loss_D /= num_batch
+        #logging
 
 
 
@@ -71,6 +78,9 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--conf', type=str, default='configs/ilsvrc_sample.json')
     parser.add_argument('--iter_gen', type=int, default=5)
     parser.add_argument('--iter_disc', type=int, default=1)
+    parser.add_argument('--batch_num', type=int, default=1)
+    parser.add_argument('--data_path', type=str, default='data/GOPRO_Large/train')
+
     '''
     currnet_path = os.path.dirname(os.path.abspath(__file__))
     parser.add_argument('-n', '--name', type=str, default='train')
