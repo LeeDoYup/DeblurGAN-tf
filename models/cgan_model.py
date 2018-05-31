@@ -16,11 +16,11 @@ image_shape = [None, 256,256,3]
 class cgan(object):
     def name(self):
         return 'cgan'
-    def __init__(self, sess, args=args):
+    def __init__(self, sess, args):
         #BaseModel.initialize(opt)
         self.args = args
         self.sess = sess
-        self.global_
+        #self.global_
 
     def create_input_placeholder(self):
         self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=image_shape),
@@ -28,9 +28,11 @@ class cgan(object):
             'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape)
             }
         self.learning_rate = tf.placeholder(dtype=tf.float32)
+        print("[*] Placeholders are created")
+        #logging
+
 
     def build_model(self):
-        self.saver = tf.train.Saver()
         self.global_step = tf.Variable(0, dtype=tf.int32, trainable=False)
         self.create_input_placeholder()
         self.G = generator(self.input['blur_img'])
@@ -42,10 +44,17 @@ class cgan(object):
             self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G)
             self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D)
 
+        self.saver = tf.train.Saver()
+        print("[*] C_GAN model build was completed")
+        #logging
+
+
     def run_optim_G(self, feed_dict, with_loss=True):
         _, loss_G, adv_loss, perceptual_loss = self.sess.run(
             [self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss],
             feed_dict=feed_dict)
+        print("[*] Generator is optimized")
+        #logging
 
         if with_loss:
             return loss_G, adv_loss, perceptual_loss
@@ -55,6 +64,8 @@ class cgan(object):
     def run_optim_D(self, feed_dict, with_loss=True):
         _, loss_D= self.sess.run([self.optim_D, self.loss_D],
             feed_dict=feed_dict)
+        print("[*] Discriminator is optimized")
+        #logging
 
         if with_loss:
             return loss_D
@@ -69,6 +80,8 @@ class cgan(object):
         
         self.loss_G = self.adv_loss + regularizer * self.perceptual_loss
         self.loss_D = wasserstein_loss(self.input['gen_img'], self.input['real_img'])
+        print(" [*] loss functions are created")
+        #logging
 
 
     def save_weights(self, checkpoint_dir, step):
