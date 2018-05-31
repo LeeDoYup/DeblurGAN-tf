@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import os
-import numpy 
+import numpy as np
 import cv2
 import glob
 import logging
@@ -40,7 +40,31 @@ def dir_image_pair(dir_path, image_type='png'):
     return pair_path
 
 
+def read_image_pair(pair_path, resize_or_crop=None, image_size=(256,256)):
+    image_blur = cv2.imread(pair_path[0], cv2.IMREAD_COLOR)
+    image_blur = image_blur / 255.0
+    image_real = cv2.imread(pair_path[1], cv2.IMREAD_COLOR)
+    image_real = image_real / 255.0
+
+    if resize_or_crop != None: 
+        assert image_size != None
+
+    if resize_or_crop == 'resize':
+        image_blur = cv2.resize(image_blur, image_size)
+        image_real = cv2.resize(image_real, image_size)
+
+    if resize_or_crop == 'crop':
+        image_blur = cv2.crop(image_blur, image_size)
+        image_real = cv2.crop(image_real, image_size)
+
+    return image_blur, image_real
 
 
 if __name__ == '__main__':
-    read_data_path('/Users/kakaobrain/GOPRO_Large/train', name='GOPRO')
+    pair_path = read_data_path('/Users/kakaobrain/GOPRO_Large/train', name='GOPRO')
+    image1, image2 = read_image_pair(pair_path[0], resize_or_crop='resize')
+
+    
+    cv2.imshow('image1',image1)
+    cv2.imshow('image2',image2)
+    cv2.waitKey(0)
