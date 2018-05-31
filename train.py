@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import time
 import os
 import sys
 import logging
@@ -20,11 +21,6 @@ def linear_decay(initial=0.0001, step, start_step=150, end_step=300):
     current_value = max(0, initial - (update_step)*step_decay)
     return current_value
 
-def build_model(args):
-    sess = tf.Session()
-    model = cgan(sess, args)
-    model.build_model()
-
 def ready_batch_data():
     #return dataset (batch or total)
     pass
@@ -38,7 +34,7 @@ def main(args):
     num_dataset = len(dataset)
     num_batch = num_dataset/args.batch_num
     sess = tf.Session()
-    model = cgan(sess,args)
+    model = cgan(sess, args)
     model.build_model()
 
 
@@ -111,7 +107,7 @@ if __name__ == '__main__':
                 if args.force is False:
                     exit(-1)
     '''
-    #main(args)
+    main(args)
 
 
 
