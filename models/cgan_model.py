@@ -49,15 +49,19 @@ class cgan(object):
         #logging
 
 
-    def run_optim_G(self, feed_dict, with_loss=True):
-        _, loss_G, adv_loss, perceptual_loss = self.sess.run(
-            [self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss],
+    def run_optim_G(self, feed_dict, with_loss=True, with_out=False):
+        _, loss_G, adv_loss, perceptual_loss, G_out = self.sess.run(
+            [self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss, self.G],
             feed_dict=feed_dict)
         print("[*] Generator is optimized")
         #logging
 
-        if with_loss:
+        if with_loss and with_out:
+            return loss_G, adv_loss, perceptual_loss, G_out
+        elif with_loss:
             return loss_G, adv_loss, perceptual_loss
+        elif with_out:
+            G_out
         else:
             return
 
@@ -71,7 +75,6 @@ class cgan(object):
             return loss_D
         else:
             return
-
 
 
     def create_loss(self, regularizer = 100):
