@@ -6,9 +6,9 @@ import os
 import time
 import logging 
 
-from ops import * #discriminator, generator
+from models.ops import * #discriminator, generator
 #from base_model import BaseModel
-from losses import *
+from models.losses import *
 
 image_shape = [None, 256,256,3]
 
@@ -25,7 +25,9 @@ class cgan(object):
     def create_input_placeholder(self):
         self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=image_shape),
             'real_img': tf.placeholder(dtype=tf.float32, shape=image_shape),
-            'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape)
+            'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape),
+            'real_feat': tf.placeholder(dtype=tf.float32, shape=None),
+            'gen_feat': tf.placeholder(dtype=tf.float32, shape=None)
             }
         self.learning_rate = tf.placeholder(dtype=tf.float32)
         print("[*] Placeholders are created")
@@ -112,6 +114,29 @@ class cgan(object):
 
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='')
+    
+    parser.add_argument('-c', '--conf', type=str, default='configs/config.json')
+    parser.add_argument('--iter_gen', type=int, default=5)
+    parser.add_argument('--iter_disc', type=int, default=1)
+    parser.add_argument('--batch_num', type=int, default=1)
+    parser.add_argument('--data_path', type=str, default='data/GOPRO_Large/train')
+    parser.add_argument('--data_name', type=str, default='GOPRO')
+
+    parser.add_argument('--checkpoint_dir', type=str, default=currnet_path+'/checkpoints/')
+    parser.add_argument('--summary_dir', type=str, default=currnet_path+'/summaries/')
+    parser.add_argument('--data_name', type=str, default='GOPRO')
+
+    parser.add_argument('--resize_or_crop', type=str, default='resize')
+    parser.add_argument('--img_x', type=int, default=256)
+    parser.add_argument('--img_y', type=int, default=256)
+
+    parser.add_argument('--is_training', action='store_true')
+    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--resize_or_crop', action='store_true')
+
+    args = parser.parse_args()
     sess = tf.Session()
     test_cgan = cgan(sess)
     test_cgan.build_model()

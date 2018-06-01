@@ -41,6 +41,7 @@ def main(args):
     sess = tf.Session()
     model = cgan(sess, args)
     model.build_model()
+
     
     for iter in range(args.epoch):
         batch_loss_G, batch_loss_D = 0.0 ,0.0
@@ -61,12 +62,13 @@ def main(args):
                 batch_loss_G +=loss_G
                 #logging: time, loss
 
+
             feed_dict_D = {model.input['gen_img']: G_out,
                         model.input['real_img']: real_img,
                         model.learning_rate: learning_rate}
 
             for j in range(args.iter_gen):
-                loss_D = model.run_optim_G(feed_dict=feed_dict_D, with_loss=True)
+                loss_D = model.run_optim_D(feed_dict=feed_dict_D, with_loss=True)
                 batch_loss_D +=loss_D
                 #logging: time, loss
 
@@ -76,8 +78,8 @@ def main(args):
 
         batch_loss_G = batch_loss_G /(num_batch * args.iter_gen)
         batch_loss_D = batch_loss_D /(num_batch * args.iter_disc)
-        print("Batch Loss of G: ", batch_loss_G)
-        print("Batch Loss of D: ", batch_loss_D)
+        print(iter, "th Batch Loss of G: ", batch_loss_G)
+        print(iter, "th Batch Loss of D: ", batch_loss_D)
         #logging
 
         if iter+1 % 30 == 0:

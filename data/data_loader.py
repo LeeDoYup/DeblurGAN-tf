@@ -50,8 +50,8 @@ def read_image_pair(pair_path, resize_or_crop=None, image_size=(256,256)):
         assert image_size != None
 
     if resize_or_crop == 'resize':
-        image_blur = cv2.resize(image_blur, image_size)
-        image_real = cv2.resize(image_real, image_size)
+        image_blur = cv2.resize(image_blur, image_size, interpolation=cv2.INTER_AREA)
+        image_real = cv2.resize(image_real, image_size, interpolation=cv2.INTER_AREA)
 
     if resize_or_crop == 'crop':
         image_blur = cv2.crop(image_blur, image_size)

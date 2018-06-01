@@ -1,6 +1,8 @@
 import tensorflow as tf
+from models.vgg_model import VGG
 
-image_shape = (224,224,3)
+image_shape = (256,256,3)
+vgg_model = VGG('vgg19')
 
 def adv_loss(sigm):
   '''
@@ -9,16 +11,9 @@ def adv_loss(sigm):
   loss = tf.reduce_sum(-1*sigm)
   return loss
 
-def perceptual_loss(gen_img, real_img):
-  '''
-  It have to input vgg feature of generated image & real_img_feat
-  '''
-  vgg19 = tf.keras.applications.VGG19(include_top=False, weights='imagenet')
-  loss_model = tf.keras.Model(inputs=vgg19.input, outputs=vgg19.get_layer('block3_conv3').output)
-  loss_model.trainable=False
-  #average with width, height
-  loss =  tf.reduce_mean(tf.square(loss_model(gen_img)-loss_model(real_img)),axis=[1,2])
-  
+def perceptual_loss(gen_img, real_img)
+  gen_feat, real_feat = vgg_model.get_pair_feature(gen_img, real_img)
+  loss =  tf.reduce_mean(tf.square(gen_feat - real_feat),axis=[1,2])
   #sum with channel
   loss = tf.reduce_sum(loss, axis=-1)
   return loss
