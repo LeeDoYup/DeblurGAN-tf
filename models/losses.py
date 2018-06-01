@@ -11,7 +11,7 @@ def adv_loss(sigm):
   loss = tf.reduce_sum(-1*sigm)
   return loss
 
-def perceptual_loss(gen_img, real_img)
+def perceptual_loss(gen_img, real_img):
   gen_feat, real_feat = vgg_model.get_pair_feature(gen_img, real_img)
   loss =  tf.reduce_mean(tf.square(gen_feat - real_feat),axis=[1,2])
   #sum with channel

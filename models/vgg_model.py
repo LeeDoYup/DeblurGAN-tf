@@ -4,13 +4,13 @@ import tensorflow as tf
 import numpy as np
 import logging
 
-class VGG19(object):
+class VGG(object):
     def __init__(self, name, include_top=False, weights='imagenet'):
-        with tf.variable_scope(name=name, reuse=tf.AUTO_REUSE) as scope:
-            if name.upper() == VGG19
+        with tf.variable_scope(name, reuse=tf.AUTO_REUSE) as scope:
+            if name.upper() == 'VGG19':
                 self.vgg = tf.keras.applications.VGG19(include_top=include_top,
                                 weights=weights)
-            elif name.upper() == VGG16:
+            elif name.upper() == 'VGG16':
                 self.vgg = tf.keras.applications.VGG16(include_top=include_top,
                                 weights=weights)
             else:
@@ -31,7 +31,7 @@ class VGG19(object):
         return gen_feat, real_feat
 
 if __name__=='__main__':
-    model = VGG19('vgg19')
+    model = VGG('vgg19')
     vars = tf.trainable_variables()
     for i, var in enumerate(vars):
         print(i,"-th variable: ", var)

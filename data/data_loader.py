@@ -13,7 +13,6 @@ def read_data_path(data_path, name='GOPRO', image_type='png'):
     for i, dir in enumerate(dir_list):
         if not name in dir:
             dir_list.remove(dir)
-            
     dir_image_pair(dir_list[0])
 
     for i, dir in enumerate(dir_list):
@@ -24,21 +23,23 @@ def read_data_path(data_path, name='GOPRO', image_type='png'):
 def dir_image_pair(dir_path, image_type='png'):
     blur_path = os.path.join(dir_path, 'blur')
     real_path = os.path.join(dir_path, 'sharp')
-
     blur_image_pathes = glob.glob(blur_path+'/*.'+image_type)
     real_image_pathes = glob.glob(real_path+'/*.'+image_type)
     assert len(blur_image_pathes) == len(real_image_pathes)
     pair_path = zip(blur_image_pathes, real_image_pathes)
     iter_pair_path = pair_path #for iteration
+    #print(list(pair_path))
+    #print(list(pair_path)V)
+    result = list(pair_path)
+    
     for blur, real in iter_pair_path:
         name1=blur.split('/')[-1]
-        name2=blur.split('/')[-1]
+        name2=real.split('/')[-1]
         if name1 != name2:
-            pair_path.remove((blur, real))
+            result.remove((blur, real))
             print("blur: %s, real: %s pair was removed in training data"%(name1, name2))
-            #logging
-    return pair_path
-
+            #logging 
+    return result 
 
 def read_image_pair(pair_path, resize_or_crop=None, image_size=(256,256)):
     image_blur = cv2.imread(pair_path[0], cv2.IMREAD_COLOR)
@@ -56,12 +57,15 @@ def read_image_pair(pair_path, resize_or_crop=None, image_size=(256,256)):
     if resize_or_crop == 'crop':
         image_blur = cv2.crop(image_blur, image_size)
         image_real = cv2.crop(image_real, image_size)
-
+    if np.size(np.shape(image_blur)) == 3:
+        image_blur = np.expand_dims(image_blur, axis=0)
+    if np.size(np.shape(image_real)) == 3:
+        image_real = np.expand_dims(image_real, axis=0)
     return image_blur, image_real
 
 
 if __name__ == '__main__':
-    pair_path = read_data_path('/Users/kakaobrain/GOPRO_Large/train', name='GOPRO')
+    pair_path = read_data_path('/data/private/data//GOPRO_Large/train', name='GOPRO')
     image1, image2 = read_image_pair(pair_path[0], resize_or_crop='resize')
 
     

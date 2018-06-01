@@ -33,8 +33,6 @@ def main(args):
     #assume there is a batch data pair:
     #dataset = data_loader.load_data(args.data_path) #have te be developed
     dataset = loader.read_data_path(args.data_path, name=args.data_name)
-    for i, data in enumerate(dataset):
-        print(data)
     #dataset = [num_dataset, ]
     num_dataset = len(dataset)
     num_batch = num_dataset/args.batch_num
@@ -47,18 +45,27 @@ def main(args):
         batch_loss_G, batch_loss_D = 0.0 ,0.0
         for i, data in enumerate(dataset):
             learning_rate = linear_decay(0.0001, iter)
+            print(iter, 'epoch,  ', i, 'batch, learning_rate',learning_rate)
             blur_img, real_img = loader.read_image_pair(data, 
                                     resize_or_crop = args.resize_or_crop, 
                                     image_size=(args.img_x, args.img_y))
-
+            
+            print(iter, 'epoch,  ', i, 'batch, image', data)
+            print(iter, 'epoch,  ', i, 'batch, image', np.shape(blur_img), np.shape(real_img))
             start_time = time.time()
+            feed_dict_G_out = {model.input['blur_img']: blur_img, model.input['real_img']: real_img}
             feed_dict_G = {model.input['blur_img']: blur_img,
                         model.input['real_img']: real_img,
                         model.learning_rate: learning_rate}
 
             for j in range(args.iter_gen):
-                loss_G, adv_loss, perceptual_loss, G_out = 
-                    model.run_optim_G(feed_dict=feed_dict_G, with_loss=True, with_out=True)
+                G_out = model.G_output(feed_dict=feed_dict_G_out)
+                feed_dict_G = {model.input['blur_img']: blur_img,
+                        model.input['real_img']: real_img,
+                        model.input['gen_img']: model.G,
+                        model.learning_rate: learning_rate}
+                loss_G, adv_loss, perceptual_loss, G_out = model.run_optim_G(feed_dict=feed_dict_G, 
+                                                                with_loss=True, with_out=True)
                 batch_loss_G +=loss_G
                 #logging: time, loss
 
@@ -96,11 +103,11 @@ if __name__ == '__main__':
     parser.add_argument('--iter_gen', type=int, default=5)
     parser.add_argument('--iter_disc', type=int, default=1)
     parser.add_argument('--batch_num', type=int, default=1)
-    parser.add_argument('--data_path', type=str, default='data/GOPRO_Large/train')
-    parser.add_argument('--data_name', type=str, default='GOPRO')
+    parser.add_argument('--epoch', type=int, default=300)
+    parser.add_argument('--data_path', type=str, default='/data/private/data/GOPRO_Large/train/')
 
-    parser.add_argument('--checkpoint_dir', type=str, default=currnet_path+'/checkpoints/')
-    parser.add_argument('--summary_dir', type=str, default=currnet_path+'/summaries/')
+    parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/')
+    parser.add_argument('--summary_dir', type=str, default='./summaries/')
     parser.add_argument('--data_name', type=str, default='GOPRO')
 
     parser.add_argument('--resize_or_crop', type=str, default='resize')
@@ -109,7 +116,6 @@ if __name__ == '__main__':
 
     parser.add_argument('--is_training', action='store_true')
     parser.add_argument('--debug', action='store_true')
-    parser.add_argument('--resize_or_crop', action='store_true')
 
     '''
     currnet_path = os.path.dirname(os.path.abspath(__file__))

@@ -23,13 +23,13 @@ class cgan(object):
         #self.global_
 
     def create_input_placeholder(self):
-        self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=image_shape),
-            'real_img': tf.placeholder(dtype=tf.float32, shape=image_shape),
-            'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape),
-            'real_feat': tf.placeholder(dtype=tf.float32, shape=None),
-            'gen_feat': tf.placeholder(dtype=tf.float32, shape=None)
+        self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='blur_img'),
+            'real_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='real_img'),
+            'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='gen_img'),
+            'real_feat': tf.placeholder(dtype=tf.float32, shape=None, name='real_feat'),
+            'gen_feat': tf.placeholder(dtype=tf.float32, shape=None, name='gen_feat')
             }
-        self.learning_rate = tf.placeholder(dtype=tf.float32)
+        self.learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
         print("[*] Placeholders are created")
         #logging
 
@@ -43,12 +43,17 @@ class cgan(object):
         if self.args.is_training:
             self.D = discriminator(self.input['gen_img'])
             self.create_loss()
-            self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G)
-            self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D)
+            t_vars = tf.trainable_variables() 
+            self.g_vars = [var for var in t_vars if 'generator' in var.name]
+            self.d_vars = [var for var in t_vars if 'disc' in var.name]
+
+            self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G, var_list=self.g_vars)
+            self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(-self.loss_D, var_list=self.d_vars)
 
         self.saver = tf.train.Saver()
         print("[*] C_GAN model build was completed")
-        #logging
+        #loggi
+        self.sess.run(tf.global_variables_initializer())
 
 
     def run_optim_G(self, feed_dict, with_loss=True, with_out=False):
@@ -66,6 +71,8 @@ class cgan(object):
             G_out
         else:
             return
+    def G_output(self, feed_dict):
+        return self.sess.run(self.G, feed_dict=feed_dict)
 
     def run_optim_D(self, feed_dict, with_loss=True):
         _, loss_D= self.sess.run([self.optim_D, self.loss_D],
@@ -81,10 +88,10 @@ class cgan(object):
 
     def create_loss(self, regularizer = 100):
         self.adv_loss = adv_loss(self.D)
-        self.perceptual_loss = perceptual_loss(self.input['gen_img'], self.input['real_img']) #vgg19 feature have to be calculated
+        self.perceptual_loss = perceptual_loss(self.G, self.input['real_img']) #vgg19 feature have to be calculated
         
         self.loss_G = self.adv_loss + regularizer * self.perceptual_loss
-        self.loss_D = wasserstein_loss(self.input['gen_img'], self.input['real_img'])
+        self.loss_D = wasserstein_loss(self.D(self.input['gen_img']), self.D(self.input['real_img']))
         print(" [*] loss functions are created")
         #logging
 

@@ -194,15 +194,15 @@ if __name__ == '__main__':
 
   tf_vars = [var for var in tf.trainable_variables() if 'disc' in var.name]
   for idx, var in enumerate(tf_vars):
-    print var
-  print disc
+    print(var)
+  print(disc)
 
 
   gent = generator(test_input)
   tf_vars = [var for var in tf.trainable_variables() if 'gene' in var.name]
   for idx, var in enumerate(tf_vars):
-    print var
-  print gent
+    print(var)
+  print(gent)
 
 
 
