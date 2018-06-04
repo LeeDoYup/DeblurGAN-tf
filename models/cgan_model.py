@@ -25,7 +25,8 @@ class cgan(object):
     def create_input_placeholder(self):
         self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='blur_img'),
             'real_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='real_img'),
-            'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='gen_img')
+            'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='gen_img'),
+            'y': tf.placeholder(dtype=tf.float32, shape=[None, 1], name='y')
             }
         self.learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
         print("[*] Placeholders are created")
@@ -40,6 +41,7 @@ class cgan(object):
         #if test mode, only generator is used.
         if self.args.is_training:
             self.D = discriminator(self.input['gen_img'])
+            self.D4G = discriminator(self.G)
             self.D_ = discriminator(self.input['real_img'])
             self.create_loss()
             t_vars = tf.trainable_variables() 
@@ -52,14 +54,14 @@ class cgan(object):
         self.saver = tf.train.Saver()
         print("[*] C_GAN model build was completed")
         #loggi
-        self.sess.run(tf.global_variables_initializer())
-        print('hello')
+        vars = (tf.trainable_variables())
+        #vars = tf.global_variables_initializer()
+        for var in vars: print(var)
 
     def run_optim_G(self, feed_dict, with_loss=True, with_out=False):
         _, loss_G, adv_loss, perceptual_loss, G_out = self.sess.run(
             [self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss, self.G],
             feed_dict=feed_dict)
-        print("[*] Generator is optimized")
         #logging
 
         if with_loss and with_out:
@@ -73,10 +75,16 @@ class cgan(object):
     def G_output(self, feed_dict):
         return self.sess.run(self.G, feed_dict=feed_dict)
 
+    def D_output(self, feed_dict):
+        return self.sess.run(self.D, feed_dict=feed_dict)
+    
+    def D__output(self, feed_dict):
+        return self.sess.run(self.D_, feed_dict=feed_dict)
+    
     def run_optim_D(self, feed_dict, with_loss=True):
+        D_ = self.D__output(feed_dict=feed_dict)
         _, loss_D= self.sess.run([self.optim_D, self.loss_D],
             feed_dict=feed_dict)
-        print("[*] Discriminator is optimized")
         #logging
 
         if with_loss:
@@ -86,11 +94,11 @@ class cgan(object):
 
 
     def create_loss(self, regularizer = 100.):
-        self.adv_loss = adv_loss(self.D)
+        self.adv_loss = adv_loss(self.D4G)
         self.perceptual_loss = perceptual_loss(self.G, self.input['real_img']) #vgg19 feature have to be calculated
         
         self.loss_G = self.adv_loss + regularizer * self.perceptual_loss
-        self.loss_D = wasserstein_loss(self.D, self.D_)
+        self.loss_D = wasserstein_loss(self.D, self.input['y'])
         print(" [*] loss functions are created")
         #logging
 

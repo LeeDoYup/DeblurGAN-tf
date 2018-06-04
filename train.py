@@ -23,10 +23,6 @@ def linear_decay(initial=0.0001, step=0, start_step=150, end_step=300):
     current_value = max(0, initial - (update_step)*step_decay)
     return current_value
 
-def ready_batch_data():
-    #return dataset (batch or total)
-    pass
-
 def main(args):
     #config = json.load(open(args.conf), 'r')
     #assert batch_num == 
@@ -39,7 +35,7 @@ def main(args):
     sess = tf.Session()
     model = cgan(sess, args)
     model.build_model()
-
+    model.sess.run(tf.global_variables_initializer())
     
     for iter in range(args.epoch):
         batch_loss_G, batch_loss_D = 0.0 ,0.0
@@ -49,36 +45,35 @@ def main(args):
             blur_img, real_img = loader.read_image_pair(data, 
                                     resize_or_crop = args.resize_or_crop, 
                                     image_size=(args.img_x, args.img_y))
-            
-            print(iter, 'epoch,  ', i, 'batch, image', data)
-            print(iter, 'epoch,  ', i, 'batch, image', np.shape(blur_img), np.shape(real_img))
             start_time = time.time()
-            feed_dict_G_out = {model.input['blur_img']: blur_img, model.input['real_img']: real_img}
-            feed_dict_G = {model.input['blur_img']: blur_img,
-                        model.input['real_img']: real_img,
-                        model.learning_rate: learning_rate}
-
+            print("[!] Generator Optimization Start")
             for j in range(args.iter_gen):
-                G_out = model.G_output(feed_dict=feed_dict_G_out)
                 feed_dict_G = {model.input['blur_img']: blur_img,
                         model.input['real_img']: real_img,
-                        model.input['gen_img']: model.G,
                         model.learning_rate: learning_rate}
+                
                 loss_G, adv_loss, perceptual_loss, G_out = model.run_optim_G(feed_dict=feed_dict_G, 
                                                                 with_loss=True, with_out=True)
+                print(iter, 'epoch,  ', i, 'batch, Generator Loss: ', loss_G,
+                        'adv loss: ', adv_loss, 'perceptual_loss: ', perceptual_loss)
                 batch_loss_G +=loss_G
                 #logging: time, loss
 
-
+            feed_dict_D = {model.input['real_img']: real_img}
+            D_ = model.D__output(feed_dict=feed_dict_D)
+            
             feed_dict_D = {model.input['gen_img']: G_out,
                         model.input['real_img']: real_img,
+                        model.input['y']: D_,
                         model.learning_rate: learning_rate}
 
-            for j in range(args.iter_gen):
+            print("[!] Discriminator Optimization Start")
+            for j in range(args.iter_disc):
                 loss_D = model.run_optim_D(feed_dict=feed_dict_D, with_loss=True)
                 batch_loss_D +=loss_D
                 #logging: time, loss
-
+                
+                print(iter, 'epoch,  ', i, 'batch, Discriminator  Loss: ', loss_D)
             batch_time = time.time() - start_time
             print("Batch training time: ", batch_time)
             #logging

@@ -61,6 +61,8 @@ def read_image_pair(pair_path, resize_or_crop=None, image_size=(256,256)):
         image_blur = np.expand_dims(image_blur, axis=0)
     if np.size(np.shape(image_real)) == 3:
         image_real = np.expand_dims(image_real, axis=0)
+    image_blur = np.array(image_blur, dtype=np.float32)
+    image_real = np.array(image_real, dtype=np.float32)
     return image_blur, image_real
 
 

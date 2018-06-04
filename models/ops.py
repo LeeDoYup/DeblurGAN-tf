@@ -74,7 +74,8 @@ def res_block(input_, output_dim, name='res_block', is_dropout=False, drop_p=0.5
     if is_dropout:
       conv = tf.nn.dropout(conv, keep_prob = drop_p)
 
-    conv = conv2d(conv, output_dim, num_input_c * 2, name=name+'/conv2')
+    #conv = conv2d(conv, output_dim, num_input_c * 2, name=name+'/conv2')
+    conv = conv2d(conv, output_dim,  name=name+'/conv2')
     conv = norm_layer(conv, 'instance')
 
     conv = tf.identity(conv+shortcut, name='residual_block_output')
@@ -186,7 +187,7 @@ def discriminator(input,  ndf=64, num_layer=3, ntype='batch'):
     return x
 
 if __name__ == '__main__':
-  test_input = np.ones([1,224,224,3], dtype=np.float32)
+  test_input = np.ones([1,256,256,3], dtype=np.float32)
   test_input = tf.constant(test_input, dtype=tf.float32)
 
   disc = discriminator(test_input)
