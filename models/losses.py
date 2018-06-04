@@ -22,6 +22,5 @@ def l2_loss(gen_img, real_img):
   return tf.reduce_mean(tf.abs(gen_img-real_img))
 
 
-def wasserstein_loss(gen_img, real_img):
-  assert gen_img.shape.as_list() == real_img.shape.as_list()
-  return tf.reduce_mean(real_img*gen_img)
+def wasserstein_loss(gen_prob, real_prob):
+  return tf.reduce_mean(real_prob*gen_prob)

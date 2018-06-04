@@ -157,7 +157,7 @@ def generator(input, ngf=64, num_block=9, ntype='instance'):
     return output
 
 
-def discriminator(input, ndf=64, num_layer=3, ntype='batch'):
+def discriminator(input,  ndf=64, num_layer=3, ntype='batch'):
   ndf = ndf
   with tf.variable_scope("discriminator", reuse=tf.AUTO_REUSE) as scope:
     with tf.variable_scope('h0', reuse=tf.AUTO_REUSE):
