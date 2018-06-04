@@ -105,7 +105,7 @@ class cgan(object):
 
     def save_weights(self, checkpoint_dir, step):
         model_name = "DeblurGAN.model"
-        checkpoint_dir = os.path.join(checkpoint_dir, self.args.model_dir)
+        checkpoint_dir = os.path.join(checkpoint_dir, model_name)
         if not os.path.exists(checkpoint_dir):
             os.makedirs(checkpoint_dir)
         self.saver.save(self.sess,
