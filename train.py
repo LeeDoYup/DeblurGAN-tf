@@ -84,9 +84,8 @@ def main(args):
         print(iter, "th Batch Loss of D: ", batch_loss_D)
         #logging
 
-        if iter+1 % 30 == 0:
+        if iter+1 % 30 == 0:        
             model.save_weights(args.checkpoint_dir, iter+1)
-    
 
 
 
@@ -102,6 +101,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', type=str, default='/data/private/data/GOPRO_Large/train/')
 
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/')
+    parser.add_argument('--model_dir', type=str, default='./checkpoints/')
     parser.add_argument('--summary_dir', type=str, default='./summaries/')
     parser.add_argument('--data_name', type=str, default='GOPRO')
 
