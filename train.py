@@ -11,6 +11,7 @@ import numpy as np
 
 import data.data_loader as loader
 from models.cgan_model import cgan
+os.system('http_proxy_on')
 
 def linear_decay(initial=0.0001, step=0, start_step=150, end_step=300):
     '''
@@ -41,12 +42,11 @@ def main(args):
         batch_loss_G, batch_loss_D = 0.0 ,0.0
         for i, data in enumerate(dataset):
             learning_rate = linear_decay(0.0001, iter)
-            print(iter, 'epoch,  ', i, 'batch, learning_rate',learning_rate)
             blur_img, real_img = loader.read_image_pair(data, 
                                     resize_or_crop = args.resize_or_crop, 
                                     image_size=(args.img_x, args.img_y))
             start_time = time.time()
-            print("[!] Generator Optimization Start")
+            logging.info("[!] Generator Optimization Start")
             for j in range(args.iter_gen):
                 feed_dict_G = {model.input['blur_img']: blur_img,
                         model.input['real_img']: real_img,
@@ -54,40 +54,52 @@ def main(args):
                 
                 loss_G, adv_loss, perceptual_loss, G_out = model.run_optim_G(feed_dict=feed_dict_G, 
                                                                 with_loss=True, with_out=True)
-                print(iter, 'epoch,  ', i, 'batch, Generator Loss: ', loss_G,
+                logging.info(iter, 'epoch,  ', i, 'batch, Generator Loss: ', loss_G,
                         'adv loss: ', adv_loss, 'perceptual_loss: ', perceptual_loss)
                 batch_loss_G +=loss_G
                 #logging: time, loss
-
-            feed_dict_D = {model.input['real_img']: real_img}
-            D_ = model.D__output(feed_dict=feed_dict_D)
+            
+            feed_dict_D = {model.input['gen_img']: G_out}
+            D = model.D_output(feed_dict=feed_dict_D)
+            logging.debur(D)
             
             feed_dict_D = {model.input['gen_img']: G_out,
                         model.input['real_img']: real_img,
-                        model.input['y']: D_,
+                        model.input['y']: D,
                         model.learning_rate: learning_rate}
 
-            print("[!] Discriminator Optimization Start")
+            logging.info("[!] Discriminator Optimization Start")
             for j in range(args.iter_disc):
                 loss_D = model.run_optim_D(feed_dict=feed_dict_D, with_loss=True)
                 batch_loss_D +=loss_D
                 #logging: time, loss
                 
-                print(iter, 'epoch,  ', i, 'batch, Discriminator  Loss: ', loss_D)
+                logging.info(iter, 'epoch,  ', i, 'batch, Discriminator  Loss: ', loss_D)
             batch_time = time.time() - start_time
-            print("Batch training time: ", batch_time)
+            logging.info("Batch training time: ", batch_time)
             #logging
 
         batch_loss_G = batch_loss_G /(num_batch * args.iter_gen)
         batch_loss_D = batch_loss_D /(num_batch * args.iter_disc)
-        print(iter, "th Batch Loss of G: ", batch_loss_G)
-        print(iter, "th Batch Loss of D: ", batch_loss_D)
+        logging.info(iter, "th Batch Loss of G: ", batch_loss_G)
+        logging.info(iter, "th Batch Loss of D: ", batch_loss_D)
         #logging
 
-        if iter+1 % 30 == 0:        
+        if iter+1 % 30 == 0 or iter == (args.epoch-1):        
             model.save_weights(args.checkpoint_dir, iter+1)
+    logging.info("[!] test started") 
+    dataset = loader.read_data_path(args.data_path, name=args.data_name)
+    
+    for i, data in enumerate(dataset):
+        blur_img, real_img = loader.read_image_pair(data, resize_or_crop = args.resize_or_crop,
+                    image_size=(args.img_x, args.img_y))
+        feed_dict_G = {model.input['blur_img']: blur_img}
+        G_out = model.G_output(feed_dict=feed_dict_G)
+        cv2.imwrite(str(i)+'_blur.png', blur_img)
+        cv2.imwrite(str(i)+'_real.png', real_img)
+        cv2.imwrite(str(i)+'_gen.png', G_out)
 
-
+    logging.info("[*] test done")
 
 if __name__ == '__main__':
     import argparse
@@ -99,6 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_num', type=int, default=1)
     parser.add_argument('--epoch', type=int, default=300)
     parser.add_argument('--data_path', type=str, default='/data/private/data/GOPRO_Large/train/')
+    parser.add_argument('--data_path_t', type=str, default='/data/private/data/GOPRO_Large/test/')
 
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/')
     parser.add_argument('--model_dir', type=str, default='./checkpoints/')

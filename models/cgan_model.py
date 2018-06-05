@@ -47,7 +47,7 @@ class cgan(object):
             t_vars = tf.trainable_variables() 
             self.g_vars = [var for var in t_vars if 'generator' in var.name]
             self.d_vars = [var for var in t_vars if 'disc' in var.name]
-
+            print(self.g_vars, self.d_vars)
             self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G, var_list=self.g_vars)
             self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D, var_list=self.d_vars)
 
@@ -98,7 +98,7 @@ class cgan(object):
         self.perceptual_loss = perceptual_loss(self.G, self.input['real_img']) #vgg19 feature have to be calculated
         
         self.loss_G = self.adv_loss + regularizer * self.perceptual_loss
-        self.loss_D = wasserstein_loss(self.D, self.input['y'])
+        self.loss_D = wasserstein_loss(self.D_, self.input['y'])
         print(" [*] loss functions are created")
         #logging
 
