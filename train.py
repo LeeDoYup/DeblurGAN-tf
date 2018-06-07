@@ -55,7 +55,7 @@ def main(args):
                 
                 loss_G, adv_loss, perceptual_loss, G_out = model.run_optim_G(feed_dict=feed_dict_G, 
                                                                 with_loss=True, with_out=True)
-                logging.debug('%d epoch,  %d batch, Generator Loss:  %f, add loss: %f, perceptual_loss: %f', iter, i, loss_G, adv_loss, perceptual_loss)
+                logging.info('%d epoch,  %d batch, Generator Loss:  %f, add loss: %f, perceptual_loss: %f', iter, i, loss_G, adv_loss, perceptual_loss)
                 batch_loss_G +=loss_G
                 #logging: time, loss
             
@@ -78,7 +78,7 @@ def main(args):
                 loss_D = model.run_optim_D(feed_dict=feed_dict_D, with_loss=True)
                 batch_loss_D += loss_D
                 #logging: time, loss 
-                logging.debug('%d epoch,  %d  batch, Discriminator  Loss:  %f', iter, i, loss_D)
+                logging.info('%d epoch,  %d  batch, Discriminator  Loss:  %f', iter, i, loss_D)
 
             batch_time = time.time() - start_time
             #logging
