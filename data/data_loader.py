@@ -65,6 +65,14 @@ def read_image_pair(pair_path, resize_or_crop=None, image_size=(256,256)):
     image_real = np.array(image_real, dtype=np.float32)
     return image_blur, image_real
 
+def read_image(path):
+    image = cv2.imread(path, cv2.IMREAD_COLOR)
+    image = image/255.0
+    
+    image = cv2.resize(image, (256,256), interpolation=cv2.INTER_AREA)
+    if np.size(np.shape(image) == 3: image = np.expand_dims(image, axis=0)
+    image = np.array(image, dtype=np.float32)
+    return image
 
 if __name__ == '__main__':
     pair_path = read_data_path('/data/private/data//GOPRO_Large/train', name='GOPRO')

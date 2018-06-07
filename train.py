@@ -117,7 +117,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_path_t', type=str, default='/data/private/data/GOPRO_Large/test/')
 
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/')
-    parser.add_argument('--model_dir', type=str, default='./checkpoints/')
+    parser.add_argument('--model_name', type=str, default='DeblurGAN.model')
     parser.add_argument('--summary_dir', type=str, default='./summaries/')
     parser.add_argument('--data_name', type=str, default='GOPRO')
 
