@@ -10,7 +10,7 @@ from models.ops import * #discriminator, generator
 #from base_model import BaseModel
 from models.losses import *
 
-image_shape = [None, 256,256,3]
+image_shape = [1,256,256,3]
 
 
 class cgan(object):
@@ -26,7 +26,8 @@ class cgan(object):
         self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='blur_img'),
             'real_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='real_img'),
             'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='gen_img'),
-            'y': tf.placeholder(dtype=tf.float32, shape=[None, 1], name='y')
+            'y': tf.placeholder(dtype=tf.float32, shape=[None, 1], name='y'),
+            'x_hat': tf.placeholder(dtype=tf.float32, shape=image_shape, name='x_hat')
             }
         self.learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
         print("[*] Placeholders are created")
@@ -43,6 +44,7 @@ class cgan(object):
             self.D = discriminator(self.input['gen_img'])
             self.D4G = discriminator(self.G)
             self.D_ = discriminator(self.input['real_img'])
+            self.D_gp = discriminator(self.input['x_hat'])
             self.create_loss()
             t_vars = tf.trainable_variables() 
             self.g_vars = [var for var in t_vars if 'generator' in var.name]
@@ -82,7 +84,7 @@ class cgan(object):
         return self.sess.run(self.D_, feed_dict=feed_dict)
     
     def run_optim_D(self, feed_dict, with_loss=True):
-        D_ = self.D__output(feed_dict=feed_dict)
+        #D_ = self.D__output(feed_dict=feed_dict)
         _, loss_D= self.sess.run([self.optim_D, self.loss_D],
             feed_dict=feed_dict)
         #logging
@@ -98,7 +100,8 @@ class cgan(object):
         self.perceptual_loss = perceptual_loss(self.G, self.input['real_img']) #vgg19 feature have to be calculated
         
         self.loss_G = self.adv_loss + regularizer * self.perceptual_loss
-        self.loss_D = wasserstein_loss(self.D_, self.input['y'])
+        #self.loss_D = wasserstein_loss(self.D_, self.input['y'])
+        self.loss_D = wasserstein_gp_loss(self.D_, self.input['y'], self.D_gp, self.input['x_hat'])
         print(" [*] loss functions are created")
         #logging
 

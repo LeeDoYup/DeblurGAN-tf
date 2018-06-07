@@ -11,6 +11,7 @@ import numpy as np
 
 import data.data_loader as loader
 from models.cgan_model import cgan
+from models.ops import *
 os.system('http_proxy_on')
 
 def linear_decay(initial=0.0001, step=0, start_step=150, end_step=300):
@@ -54,35 +55,37 @@ def main(args):
                 
                 loss_G, adv_loss, perceptual_loss, G_out = model.run_optim_G(feed_dict=feed_dict_G, 
                                                                 with_loss=True, with_out=True)
-                logging.info(iter, 'epoch,  ', i, 'batch, Generator Loss: ', loss_G,
-                        'adv loss: ', adv_loss, 'perceptual_loss: ', perceptual_loss)
+                logging.debug('%d epoch,  %d batch, Generator Loss:  %f, add loss: %f, perceptual_loss: %f', iter, i, loss_G, adv_loss, perceptual_loss)
                 batch_loss_G +=loss_G
                 #logging: time, loss
             
+            '''
+            Ready for Training Discriminator
+            '''
             feed_dict_D = {model.input['gen_img']: G_out}
             D = model.D_output(feed_dict=feed_dict_D)
-            logging.debur(D)
+            
+            x_hat = model.sess.run(get_x_hat(G_out, real_img, args.batch_num))
             
             feed_dict_D = {model.input['gen_img']: G_out,
                         model.input['real_img']: real_img,
                         model.input['y']: D,
+                        model.input['x_hat']: x_hat, 
                         model.learning_rate: learning_rate}
 
             logging.info("[!] Discriminator Optimization Start")
             for j in range(args.iter_disc):
                 loss_D = model.run_optim_D(feed_dict=feed_dict_D, with_loss=True)
-                batch_loss_D +=loss_D
-                #logging: time, loss
-                
-                logging.info(iter, 'epoch,  ', i, 'batch, Discriminator  Loss: ', loss_D)
+                batch_loss_D += loss_D
+                #logging: time, loss 
+                logging.debug('%d epoch,  %d  batch, Discriminator  Loss:  %f', iter, i, loss_D)
+
             batch_time = time.time() - start_time
-            logging.info("Batch training time: ", batch_time)
             #logging
 
         batch_loss_G = batch_loss_G /(num_batch * args.iter_gen)
         batch_loss_D = batch_loss_D /(num_batch * args.iter_disc)
-        logging.info(iter, "th Batch Loss of G: ", batch_loss_G)
-        logging.info(iter, "th Batch Loss of D: ", batch_loss_D)
+        logging.info("%d iter's Average Batch Loss:: G_Loss: %f, D_Loss: %f", iter, batch_loss_G, batch_loss_D)
         #logging
 
         if iter+1 % 30 == 0 or iter == (args.epoch-1):        
