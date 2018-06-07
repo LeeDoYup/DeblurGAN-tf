@@ -107,7 +107,7 @@ class cgan(object):
 
 
     def save_weights(self, checkpoint_dir, step):
-        model_name = "DeblurGAN.model"
+        model_name = self.args.model_name #"DeblurGAN.model"
         checkpoint_dir = os.path.join(checkpoint_dir, model_name)
         if not os.path.exists(checkpoint_dir):
             os.makedirs(checkpoint_dir)
@@ -117,11 +117,12 @@ class cgan(object):
 
     def load_weights(self, checkpoint_dir):
         import re
-        checkpoint_dir = os.path.join(checkpoint_dir, self.args.model_dir)
+        checkpoint_dir = os.path.join(checkpoint_dir, self.args.model_name)
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:
             ckpt_nmae = os.path.basename(ckpt.model_checkpoint_path)
             self.saver.restore(self.sess, os.path.join(checkpoint_dir, ckpt_name))
+            counter = int(next(re.finditer("(\d+)(?!.*\d)", ckpt_name)).group(0))
             print(" [*] Success to read {}".format(ckpt_name))
             return True, counter
         else:
@@ -142,6 +143,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_name', type=str, default='GOPRO')
 
     parser.add_argument('--checkpoint_dir', type=str, default=currnet_path+'/checkpoints/')
+    parser.add_argument('--model_name', type=str, default='DeblurGAN.model')
     parser.add_argument('--summary_dir', type=str, default=currnet_path+'/summaries/')
     parser.add_argument('--data_name', type=str, default='GOPRO')
 
