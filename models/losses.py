@@ -28,15 +28,14 @@ def l2_loss(gen_img, real_img):
 def wasserstein_loss(gen_prob, real_prob, with_gp=True, d_x_hat=None):
   loss_fake = tf.nn.sigmoid_cross_entropy_with_logits(logits=gen_prob, labels=tf.zeros_like(gen_prob))
   loss_real = tf.nn.sigmoid_cross_entropy_with_logits(logits=real_prob, labels=tf.ones_like(real_prob))
-  loss_D = loss_fake - loss_real
+  loss_D = loss_fake + loss_real
     
   return tf.reduce_sum(loss_D)
   #return tf.reduce_sum(real_prob*gen_prob)
 
-def wasserstein_gp_loss(gen_prob, real_prob, d_gp, x_hat):
-  loss_fake = tf.nn.sigmoid_cross_entropy_with_logits(logits=gen_prob, labels=tf.zeros_like(gen_prob))
-  loss_real = tf.nn.sigmoid_cross_entropy_with_logits(logits=real_prob, labels=tf.ones_like(real_prob))
-  loss_D = loss_fake - loss_real
+def wasserstein_gp_loss(prob, gt, d_gp, x_hat):
+  loss_D = tf.nn.sigmoid_cross_entropy_with_logits(logits=prob, labels=gt)
+  loss_D = tf.reduce_mean(loss_D) 
   
   grad_d_x_hat = tf.gradients(d_gp, [x_hat])[0]
   red_idx = list(range(1, x_hat.shape.ndims))

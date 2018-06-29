@@ -26,7 +26,6 @@ class cgan(object):
         self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='blur_img'),
             'real_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='real_img'),
             'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='gen_img'),
-            'y': tf.placeholder(dtype=tf.float32, shape=[None, 1], name='y'),
             'x_hat': tf.placeholder(dtype=tf.float32, shape=image_shape, name='x_hat')
             }
         self.learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
@@ -41,24 +40,24 @@ class cgan(object):
 
         #if test mode, only generator is used.
         if self.args.is_training:
-            self.D = discriminator(self.input['gen_img'])
+            self.D = discriminator(tf.concat([self.input['gen_img'], self.input['real_img']], axis=0))
+            self.gt = tf.concat([tf.zeros([self.args.batch_num, 1]), tf.ones([self.args.batch_num,1])], axis=0)
             self.D4G = discriminator(self.G)
-            self.D_ = discriminator(self.input['real_img'])
             self.D_gp = discriminator(self.input['x_hat'])
             self.create_loss()
             t_vars = tf.trainable_variables() 
             self.g_vars = [var for var in t_vars if 'generator' in var.name]
             self.d_vars = [var for var in t_vars if 'disc' in var.name]
-            print(self.g_vars, self.d_vars)
             self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G, var_list=self.g_vars)
             self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D, var_list=self.d_vars)
-
+        
+        print(self.g_vars, self.d_vars)
         self.saver = tf.train.Saver()
         print("[*] C_GAN model build was completed")
         #loggi
         vars = (tf.trainable_variables())
         #vars = tf.global_variables_initializer()
-        for var in vars: print(var)
+        #for var in vars: print(var)
 
     def run_optim_G(self, feed_dict, with_loss=True, with_out=False):
         _, loss_G, adv_loss, perceptual_loss, G_out = self.sess.run(
@@ -80,8 +79,8 @@ class cgan(object):
     def D_output(self, feed_dict):
         return self.sess.run(self.D, feed_dict=feed_dict)
     
-    def D__output(self, feed_dict):
-        return self.sess.run(self.D_, feed_dict=feed_dict)
+    def D4G_output(self, feed_dict):
+        return self.sess.run(self.D4G, feed_dict=feed_dict)
     
     def run_optim_D(self, feed_dict, with_loss=True):
         #D_ = self.D__output(feed_dict=feed_dict)
@@ -101,7 +100,7 @@ class cgan(object):
         
         self.loss_G = self.adv_loss + regularizer * self.perceptual_loss
         #self.loss_D = wasserstein_loss(self.D_, self.input['y'])
-        self.loss_D = wasserstein_gp_loss(self.D_, self.input['y'], self.D_gp, self.input['x_hat'])
+        self.loss_D = wasserstein_gp_loss(self.D, self.gt,self.D_gp, self.input['x_hat'])
         print(" [*] loss functions are created")
         #logging
 

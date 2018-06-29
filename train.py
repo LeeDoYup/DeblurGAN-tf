@@ -47,8 +47,10 @@ def main(args):
                                     resize_or_crop = args.resize_or_crop, 
                                     image_size=(args.img_x, args.img_y))
             start_time = time.time()
+            #'''
             logging.info("[!] Generator Optimization Start")
-            for j in range(args.iter_gen):
+            #for j in range(args.iter_gen):
+            if i % 5 == 0 :    
                 feed_dict_G = {model.input['blur_img']: blur_img,
                         model.input['real_img']: real_img,
                         model.learning_rate: learning_rate}
@@ -59,36 +61,35 @@ def main(args):
                 batch_loss_G +=loss_G
                 #logging: time, loss
             
-            '''
-            Ready for Training Discriminator
-            '''
-            feed_dict_D = {model.input['gen_img']: G_out}
-            D = model.D_output(feed_dict=feed_dict_D)
+             
+            #Ready for Training Discriminator
             
+            feed_dict_G = {model.input['blur_img']: blur_img}
+            G_out = model.G_output(feed_dict=feed_dict_G)
             x_hat = model.sess.run(get_x_hat(G_out, real_img, args.batch_num))
             
             feed_dict_D = {model.input['gen_img']: G_out,
                         model.input['real_img']: real_img,
-                        model.input['y']: D,
                         model.input['x_hat']: x_hat, 
                         model.learning_rate: learning_rate}
 
             logging.info("[!] Discriminator Optimization Start")
-            for j in range(args.iter_disc):
-                loss_D = model.run_optim_D(feed_dict=feed_dict_D, with_loss=True)
-                batch_loss_D += loss_D
+            #for j in range(args.iter_disc):
+            loss_D = model.run_optim_D(feed_dict=feed_dict_D, with_loss=True)
+            print(loss_D)
+            batch_loss_D += loss_D
                 #logging: time, loss 
-                logging.info('%d epoch,  %d  batch, Discriminator  Loss:  %f', iter, i, loss_D)
+            logging.info('%d epoch,  %d  batch, Discriminator  Loss:  %f', iter, i, loss_D)
 
             batch_time = time.time() - start_time
             #logging
-
-        batch_loss_G = batch_loss_G /(num_batch * args.iter_gen)
-        batch_loss_D = batch_loss_D /(num_batch * args.iter_disc)
+            #'''
+        batch_loss_G = batch_loss_G /(num_batch / args.iter_gen)
+        batch_loss_D = batch_loss_D /(num_batch / args.iter_disc)
         logging.info("%d iter's Average Batch Loss:: G_Loss: %f, D_Loss: %f", iter, batch_loss_G, batch_loss_D)
         #logging
 
-        if iter+1 % 30 == 0 or iter == (args.epoch-1):        
+        if (iter+1) % 30 == 0 or iter == (args.epoch-1):        
             model.save_weights(args.checkpoint_dir, iter+1)
     logging.info("[!] test started") 
     dataset = loader.read_data_path(args.data_path, name=args.data_name)
@@ -109,8 +110,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     
     parser.add_argument('-c', '--conf', type=str, default='configs/config.json')
-    parser.add_argument('--iter_gen', type=int, default=5)
-    parser.add_argument('--iter_disc', type=int, default=1)
+    parser.add_argument('--iter_gen', type=int, default=1)
+    parser.add_argument('--iter_disc', type=int, default=5)
     parser.add_argument('--batch_num', type=int, default=1)
     parser.add_argument('--epoch', type=int, default=300)
     parser.add_argument('--data_path', type=str, default='/data/private/data/GOPRO_Large/train/')
@@ -128,14 +129,7 @@ if __name__ == '__main__':
     parser.add_argument('--is_training', action='store_true')
     parser.add_argument('--debug', action='store_true')
 
-    '''
-    currnet_path = os.path.dirname(os.path.abspath(__file__))
-    parser.add_argument('-n', '--name', type=str, default='train')
-    
-    
-    parser.add_argument('--debug', action='store_true')
-    parser.parse_args('--is_training', action='store_true')
-    '''
+     
     args = parser.parse_args()
 
     log_format = '[%(asctime)s %(levelname)s] %(message)s'
@@ -144,20 +138,11 @@ if __name__ == '__main__':
     logging.getLogger("cgan.*").setLevel(level)
 
     
-    '''
-    args.checkpoint_dir = os.path.join(args.checkpoint_dir, args.name)
-    args.summary_dir = os.path.join(args.summary_dir, args.name)
-
-    for dirname in [args.checkpoint_dir, args.summary_dir]:
-        if os.path.exists(dirname):
-            if args.name == 'test':
-                shutil.rmtree(dirname)
-                logging.warning('%s directory is exists FORCE DELETED!', dirname)
-            else:
-                logging.error('%s directory is exists', dirname)
-                if args.force is False:
-                    exit(-1)
-    '''
+    dataset = loader.read_data_path(args.data_path, name=args.data_name)
+    for i in range(370, 340):
+        print(hey)
+        print(dataset[i])
+    
     main(args)
 
 

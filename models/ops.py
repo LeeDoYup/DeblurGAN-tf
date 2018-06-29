@@ -44,10 +44,6 @@ def deconv2d(input_, output_dim, kernel_h=3, kernel_w=None, stride_h=1, stride_w
   if initializer == None: initializer = tf.contrib.layers.xavier_initializer()
 
   with tf.variable_scope(name, reuse = tf.AUTO_REUSE):
-    '''
-    w = tf.get_variable('w', [kernel_h, kernel_w, input_.get_shape()[-1], output_dim],
-      initializer=initializer)
-    '''
     deconv = tf.layers.conv2d_transpose(input_, output_dim, [kernel_h, kernel_w], strides=[stride_h, stride_w], padding=padding, use_bias=use_bias)
 
   return deconv

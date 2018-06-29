@@ -70,7 +70,8 @@ def read_image(path):
     image = image/255.0
     
     image = cv2.resize(image, (256,256), interpolation=cv2.INTER_AREA)
-    if np.size(np.shape(image) == 3: image = np.expand_dims(image, axis=0)
+    if np.size(np.shape(image)) == 3: 
+        image = np.expand_dims(image, axis=0)
     image = np.array(image, dtype=np.float32)
     return image
 
