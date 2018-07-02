@@ -26,8 +26,8 @@ def l2_loss(gen_img, real_img):
 
 
 def wasserstein_loss(gen_prob, real_prob, with_gp=True, d_x_hat=None):
-  loss_fake = tf.nn.sigmoid_cross_entropy_with_logits(logits=gen_prob, labels=tf.zeros_like(gen_prob))
-  loss_real = tf.nn.sigmoid_cross_entropy_with_logits(logits=real_prob, labels=tf.ones_like(real_prob))
+  loss_fake = tf.nn.sigmoid_cross_entropy_with_logits(logits=gen_prob+0.0001, labels=tf.zeros_like(gen_prob))
+  loss_real = tf.nn.sigmoid_cross_entropy_with_logits(logits=real_prob+0.0001, labels=tf.ones_like(real_prob))
   loss_D = loss_fake + loss_real
     
   return tf.reduce_sum(loss_D)

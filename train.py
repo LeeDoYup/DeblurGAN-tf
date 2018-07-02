@@ -47,7 +47,7 @@ def main(args):
                                     resize_or_crop = args.resize_or_crop, 
                                     image_size=(args.img_x, args.img_y))
             start_time = time.time()
-            #'''
+            '''
             logging.info("[!] Generator Optimization Start")
             #for j in range(args.iter_gen):
             if i % 5 == 0 :    
@@ -83,7 +83,11 @@ def main(args):
 
             batch_time = time.time() - start_time
             #logging
-            #'''
+            '''
+            if (np.nan in real_img) or (np.nan in blur_img):
+                print('nop'*100)
+        print('bye bye')
+        return 
         batch_loss_G = batch_loss_G /(num_batch / args.iter_gen)
         batch_loss_D = batch_loss_D /(num_batch / args.iter_disc)
         logging.info("%d iter's Average Batch Loss:: G_Loss: %f, D_Loss: %f", iter, batch_loss_G, batch_loss_D)
