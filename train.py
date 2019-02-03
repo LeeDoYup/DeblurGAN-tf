@@ -38,7 +38,7 @@ def main(args):
     model = cgan(sess, args)
     model.build_model()
     model.sess.run(tf.global_variables_initializer())
-    
+     
     for iter in range(args.epoch):
         batch_loss_G, batch_loss_D = 0.0 ,0.0
         for i, data in enumerate(dataset):

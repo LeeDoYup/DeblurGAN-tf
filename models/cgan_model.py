@@ -48,8 +48,8 @@ class cgan(object):
             self.g_vars = [var for var in t_vars if 'generator' in var.name]
             self.d_vars = [var for var in t_vars if 'disc' in var.name]
 
-            self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G, var_list=self.g_vars)
-            self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D, var_list=self.d_vars)
+            self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G, self.global_step, self.g_vars)
+            self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D, self.global_step, self.d_vars)
         
         self.saver = tf.train.Saver()
         print("[*] C_GAN model build was completed")
@@ -62,12 +62,12 @@ class cgan(object):
                     tf.summary.image('GOPRO/pred_img', self.G)]
         self.image_summary_op = tf.summary.merge(image_op)
 
-    def run_optim_G(self, feed_dict, with_loss=True):
-        summary, _, loss_G, adv_loss, perceptual_loss = self.sess.run(
-            [self.gen_summary_op, self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss],
+    def run_optim_G(self, feed_dict, with_loss=True, step=0):
+        summary, _, loss_G, adv_loss, perceptual_loss, step= self.sess.run(
+            [self.gen_summary_op, self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss, self.global_step],
             feed_dict=feed_dict)
 
-        self.writer.add_summary(summary)
+        self.writer.add_summary(summary, step)
         if with_loss:
             return loss_G, adv_loss, perceptual_loss
         else:
@@ -79,12 +79,12 @@ class cgan(object):
     def D_output(self, feed_dict):
         return self.sess.run(self.D, feed_dict=feed_dict)
     
-    def run_optim_D(self, feed_dict, with_loss=True):
+    def run_optim_D(self, feed_dict, with_loss=True, step=0):
         #D_ = self.D__output(feed_dict=feed_dict)
-        summary, img_summary, _, loss_D = self.sess.run([self.disc_summary_op, self.image_summary_op,\
-                                            self.optim_D, self.loss_D],
+        summary, img_summary, _, loss_D, step = self.sess.run([self.disc_summary_op, self.image_summary_op,\
+                                            self.optim_D, self.loss_D, self.global_step],
                                             feed_dict=feed_dict)
-        self.writer.add_summary(summary)
+        self.writer.add_summary(summary, step)
         self.writer.add_summary(img_summary)
 
         if with_loss:
@@ -100,9 +100,9 @@ class cgan(object):
         self.loss_D = wasserstein_gp_loss(self.D, self.gt,self.D_gp, self.x_hat)
 
         gen_summary = [tf.summary.scalar('loss/D/loss_D', self.loss_D)]
-        disc_summary = [tf.summary.scalar('loss/G/loss_G', self.loss_G),
-                        tf.summary.scalar('loss/G/adv_loss', self.adv_loss),
-                        tf.summary.scalar('loss/G/perceptual_loss', self.perceptual_loss)]
+        disc_summary = [tf.summary.scalar('loss/G/loss_G', tf.reduce_mean(self.loss_G)),
+                        tf.summary.scalar('loss/G/adv_loss', tf.reduce_mean(self.adv_loss)),
+                        tf.summary.scalar('loss/G/perceptual_loss', tf.reduce_mean(self.perceptual_loss))]
 
         self.gen_summary_op = tf.summary.merge(gen_summary)
         self.disc_summary_op = tf.summary.merge(disc_summary)
