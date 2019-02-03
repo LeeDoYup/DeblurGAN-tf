@@ -25,7 +25,7 @@ def linear_decay(initial=0.0001, step=0, start_step=150, end_step=300):
     current_value = max(0, initial - (update_step)*step_decay)
     return current_value
 
-def main(args):
+def train(args):
     #assume there is a batch data pair:
 
     dataset = loader.read_data_path(args.data_path_train, name=args.data_name)
@@ -48,7 +48,7 @@ def main(args):
             start_time = time.time()
             
             logging.info("[!] Generator Optimization Start")
-            #for j in range(args.iter_gen):
+
             feed_dict = {model.input['blur_img']: blur_img,\
                         model.input['real_img']: real_img,\
                         model.learning_rate: learning_rate}
@@ -69,7 +69,6 @@ def main(args):
             logging.info('%d epoch,  %d  batch, Discriminator  Loss:  %f', iter, i, loss_D)
 
             batch_time = time.time() - start_time
-            #print("Time for training a batch: ", batch_time)
             
         batch_loss_G = batch_loss_G /(num_batch / args.iter_gen)
         batch_loss_D = batch_loss_D /(num_batch / args.iter_disc)
@@ -123,10 +122,10 @@ if __name__ == '__main__':
     log_format = '[%(asctime)s %(levelname)s] %(message)s'
     level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(level=level, format=log_format, stream=sys.stderr)
-    logging.getLogger("cgan.*").setLevel(level)
+    logging.getLogger("DeblurGAN_TRAIN.*").setLevel(level)
 
     
-    main(args)
+    train(args)
 
 
 
