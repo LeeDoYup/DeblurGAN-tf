@@ -1,8 +1,0 @@
-{
-    "train": {
-        "batch_size": 1,
-	    "epoch": 300,
-	    "learning_rate": 0.0001
-    }
-}
-
