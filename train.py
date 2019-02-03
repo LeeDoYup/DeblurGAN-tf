@@ -28,9 +28,7 @@ def linear_decay(initial=0.0001, step=0, start_step=150, end_step=300):
 def main(args):
     #assume there is a batch data pair:
 
-    #dataset = data_loader.load_data(args.data_path) #have te be developed
-    dataset = loader.read_data_path(args.data_path, name=args.data_name)
-    #dataset = [num_dataset, ]
+    dataset = loader.read_data_path(args.data_path_train, name=args.data_name)
     num_dataset = len(dataset)
     num_batch = num_dataset/args.batch_num
     sess = tf.Session()
@@ -80,7 +78,7 @@ def main(args):
         if (iter+1) % 50 == 0 or iter == (args.epoch-1):        
             model.save_weights(args.checkpoint_dir, model.global_step, write_meta_graph=False)
     logging.info("[!] test started") 
-    dataset = loader.read_data_path(args.data_path_t, name=args.data_name)
+    dataset = loader.read_data_path(args.data_path_test, name=args.data_name)
     
     for i, data in enumerate(dataset):
         if os.path.exists('./test_result'):
@@ -103,8 +101,8 @@ if __name__ == '__main__':
     parser.add_argument('--iter_disc', type=int, default=5)
     parser.add_argument('--batch_num', type=int, default=1)
     parser.add_argument('--epoch', type=int, default=300)
-    parser.add_argument('--data_path', type=str, default='/data/private/data/GOPRO_Large/train/')
-    parser.add_argument('--data_path_t', type=str, default='/data/private/data/GOPRO_Large/test/')
+    parser.add_argument('--data_path_train', type=str, default='/data/private/data/GOPRO_Large/train/')
+    parser.add_argument('--data_path_test', type=str, default='/data/private/data/GOPRO_Large/test/')
 
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/')
     parser.add_argument('--model_name', type=str, default='DeblurGAN.model')
@@ -128,7 +126,6 @@ if __name__ == '__main__':
     logging.getLogger("cgan.*").setLevel(level)
 
     
-    dataset = loader.read_data_path(args.data_path, name=args.data_name)
     main(args)
 
 

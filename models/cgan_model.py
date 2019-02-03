@@ -10,8 +10,6 @@ from models.ops import * #discriminator, generator
 #from base_model import BaseModel
 from models.losses import *
 
-image_shape = [1,256,256,3]
-
 
 class cgan(object):
     def name(self):
@@ -21,10 +19,11 @@ class cgan(object):
         self.args = args
         self.sess = sess
         self.image_op = []
+        self.image_shape = [None, args.img_h, args.img_w, args.img_c]
 
     def create_input_placeholder(self):
-        self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='blur_img'),
-            'real_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='real_img')
+        self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=self.image_shape, name='blur_img'),
+            'real_img': tf.placeholder(dtype=tf.float32, shape=self.image_shape, name='real_img')
             }
         self.learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
         print("[*] Placeholders are created")
@@ -35,22 +34,24 @@ class cgan(object):
         self.create_input_placeholder()
         self.G = generator(self.input['blur_img'])
 
-        #if test mode, only generator is used.
-        if self.args.is_training:
-            self.D = discriminator(tf.concat([self.G, self.input['real_img']], axis=0))
-            self.gt = tf.concat([tf.zeros([self.args.batch_num, 1]), tf.ones([self.args.batch_num,1])], axis=0)
-            self.x_hat = get_x_hat(self.G, self.input['real_img'], self.args.batch_num)
-            self.D_gp = discriminator(self.x_hat)
-
-            self.create_loss()
-
-            t_vars = tf.trainable_variables() 
-            self.g_vars = [var for var in t_vars if 'generator' in var.name]
-            self.d_vars = [var for var in t_vars if 'disc' in var.name]
-
-            self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G, self.global_step, self.g_vars)
-            self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D, self.global_step, self.d_vars)
+        #if custom-test mode, only generator is used.
+        try:
+            if self.args.is_test: return
         
+        self.D = discriminator(tf.concat([self.G, self.input['real_img']], axis=0))
+        self.gt = tf.concat([tf.zeros([self.args.batch_num, 1]), tf.ones([self.args.batch_num,1])], axis=0)
+        self.x_hat = get_x_hat(self.G, self.input['real_img'], self.args.batch_num)
+        self.D_gp = discriminator(self.x_hat)
+
+        self.create_loss()
+
+        t_vars = tf.trainable_variables() 
+        self.g_vars = [var for var in t_vars if 'generator' in var.name]
+        self.d_vars = [var for var in t_vars if 'disc' in var.name]
+
+        self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G, self.global_step, self.g_vars)
+        self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D, self.global_step, self.d_vars)
+    
         self.saver = tf.train.Saver()
         print("[*] C_GAN model build was completed")
         self.writer = tf.summary.FileWriter(self.args.summary_dir, self.sess.graph)
@@ -145,8 +146,6 @@ if __name__ == '__main__':
     parser.add_argument('--iter_gen', type=int, default=5)
     parser.add_argument('--iter_disc', type=int, default=1)
     parser.add_argument('--batch_num', type=int, default=1)
-    parser.add_argument('--data_path', type=str, default='data/GOPRO_Large/train')
-    parser.add_argument('--data_name', type=str, default='GOPRO')
 
     parser.add_argument('--checkpoint_dir', type=str, default=currnet_path+'/checkpoints/')
     parser.add_argument('--model_name', type=str, default='DeblurGAN.model')
@@ -154,12 +153,12 @@ if __name__ == '__main__':
     parser.add_argument('--data_name', type=str, default='GOPRO')
 
     parser.add_argument('--resize_or_crop', type=str, default='resize')
-    parser.add_argument('--img_x', type=int, default=256)
-    parser.add_argument('--img_y', type=int, default=256)
+    parser.add_argument('--img_h', type=int, default=256)
+    parser.add_argument('--img_w', type=int, default=256)
+    parser.add_argument('--img_c', type=int, default=3)
 
-    parser.add_argument('--is_training', action='store_true')
+    parser.add_argument('--is_test', action='store_true')
     parser.add_argument('--debug', action='store_true')
-    parser.add_argument('--resize_or_crop', action='store_true')
 
     args = parser.parse_args()
     sess = tf.Session()
@@ -169,8 +168,6 @@ if __name__ == '__main__':
     print(test_cgan.D)
     print(test_cgan.G)
     print(test_cgan.adv_loss)
-    #print(test_cgan.perceptual_loss)
-    #print(test_cgan.loss_G)
     print(test_cgan.loss_D)
 
 
