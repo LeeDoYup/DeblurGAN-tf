@@ -43,11 +43,11 @@ def train(args):
             learning_rate = linear_decay(0.0001, iter)
             blur_img, real_img = loader.read_image_pair(data, 
                                     resize_or_crop = args.resize_or_crop, 
-                                    image_size=(args.img_x, args.img_y))
+                                    image_size=(args.img_h, args.img_w))
 
             start_time = time.time()
             
-            logging.info("[!] Generator Optimization Start")
+            #logging.info("[!] Generator Optimization Start")
 
             feed_dict = {model.input['blur_img']: blur_img,\
                         model.input['real_img']: real_img,\
@@ -61,12 +61,12 @@ def train(args):
                 batch_loss_G +=loss_G
             
             #Ready for Training Discriminator
-            logging.info("[!] Discriminator Optimization Start")
+            #logging.info("[!] Discriminator Optimization Start")
             
             #for j in range(args.iter_disc):
-            loss_D = model.run_optim_D(feed_dict=feed_dict, with_loss=True)
+            loss_D, loss_disc, loss_gp  = model.run_optim_D(feed_dict=feed_dict, with_loss=True)
             batch_loss_D += loss_D
-            logging.info('%d epoch,  %d  batch, Discriminator  Loss:  %f', iter, i, loss_D)
+            logging.info('%d epoch,  %d  batch, Discriminator  Loss:  %f, loss_disc:  %f, gp_loss: %f', iter, i, loss_D, loss_disc, loss_gp)
 
             batch_time = time.time() - start_time
             
@@ -83,12 +83,12 @@ def train(args):
         if os.path.exists('./test_result'):
             os.mkdir('./test_result')
         blur_img, real_img = loader.read_image_pair(data, resize_or_crop = args.resize_or_crop,
-                    image_size=(args.img_x, args.img_y))
+                    image_size=(args.img_h, args.img_w))
         feed_dict_G = {model.input['blur_img']: blur_img}
         G_out = model.G_output(feed_dict=feed_dict_G)
-        cv2.imwrite('./test_result/'+str(i)+'_blur.png', blur_img)
-        cv2.imwrite('./test_result/'+str(i)+'_real.png', real_img)
-        cv2.imwrite('./test_result/'+str(i)+'_gen.png', G_out)
+        cv2.imwrite('./test_result/'+str(i)+'_blur.png', (blur_img+1.0)/2.0 *255.)
+        cv2.imwrite('./test_result/'+str(i)+'_real.png', (real_img+1.0)/2.0 *255.)
+        cv2.imwrite('./test_result/'+str(i)+'_gen.png', (G_out+1.0)/2.0*255.)
 
     logging.info("[*] test done")
 
@@ -113,7 +113,6 @@ if __name__ == '__main__':
     parser.add_argument('--img_w', type=int, default=256)
     parser.add_argument('--img_c', type=int, default=3)
 
-    parser.add_argument('--is_training', action='store_true')
     parser.add_argument('--debug', action='store_true')
 
      

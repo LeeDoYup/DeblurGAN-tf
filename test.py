@@ -37,7 +37,7 @@ def test(args):
         G_out = model.G_output(feed_dict=feed_dict_G)
         logging.debug("The image was converted")
 
-        cv2.imwrite(os.path.join(args.result_dir, 'sharp_'+data.split('/')[-1]), G_out)
+        cv2.imwrite(os.path.join(args.result_dir, 'sharp_'+data.split('/')[-1]), (G_out+1.0)/2.0*255.0)
         logging.info("%s Image save was completed", data)
 
 
