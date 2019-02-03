@@ -62,7 +62,7 @@ class cgan(object):
                     tf.summary.image('GOPRO/pred_img', self.G)]
         self.image_summary_op = tf.summary.merge(image_op)
 
-    def run_optim_G(self, feed_dict, with_loss=True, step=0):
+    def run_optim_G(self, feed_dict, with_loss=True):
         summary, _, loss_G, adv_loss, perceptual_loss, step= self.sess.run(
             [self.gen_summary_op, self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss, self.global_step],
             feed_dict=feed_dict)
@@ -79,7 +79,7 @@ class cgan(object):
     def D_output(self, feed_dict):
         return self.sess.run(self.D, feed_dict=feed_dict)
     
-    def run_optim_D(self, feed_dict, with_loss=True, step=0):
+    def run_optim_D(self, feed_dict, with_loss=True):
         #D_ = self.D__output(feed_dict=feed_dict)
         summary, img_summary, _, loss_D, step = self.sess.run([self.disc_summary_op, self.image_summary_op,\
                                             self.optim_D, self.loss_D, self.global_step],
@@ -123,14 +123,17 @@ class cgan(object):
         checkpoint_dir = os.path.join(checkpoint_dir, self.args.model_name)
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:
-            ckpt_nmae = os.path.basename(ckpt.model_checkpoint_path)
-            self.saver.restore(self.sess, os.path.join(checkpoint_dir, ckpt_name))
-            counter = int(next(re.finditer("(\d+)(?!.*\d)", ckpt_name)).group(0))
-            print(" [*] Success to read {}".format(ckpt_name))
-            return True, counter
+            try:
+                ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
+                self.saver.restore(self.sess, os.path.join(checkpoint_dir, ckpt_name))
+                print(" [*] Success to read {}".format(ckpt_name))
+                return True
+            except Exception as e:
+                print("[!] Can't load: ", ckpt_name)
         else:
-            print(" [*] Success to read {}".format(ckpt_name))
-            return False, 0
+            print("[*] There is no saved file.")
+            print("[*] Training Start from the scratch.")
+            return False
 
 
 

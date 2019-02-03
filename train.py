@@ -26,7 +26,6 @@ def linear_decay(initial=0.0001, step=0, start_step=150, end_step=300):
     return current_value
 
 def main(args):
-    #config = json.load(open(args.conf), 'r')
     #assume there is a batch data pair:
 
     #dataset = data_loader.load_data(args.data_path) #have te be developed
@@ -38,6 +37,7 @@ def main(args):
     model = cgan(sess, args)
     model.build_model()
     model.sess.run(tf.global_variables_initializer())
+    model.load_weights(args.checkpoint_dir)
      
     for iter in range(args.epoch):
         batch_loss_G, batch_loss_D = 0.0 ,0.0
@@ -77,10 +77,10 @@ def main(args):
         batch_loss_D = batch_loss_D /(num_batch / args.iter_disc)
         logging.info("%d iter's Average Batch Loss:: G_Loss: %f, D_Loss: %f", iter, batch_loss_G, batch_loss_D)
 
-        if (iter+1) % 30 == 0 or iter == (args.epoch-1):        
-            model.save_weights(args.checkpoint_dir, iter+1)
+        if (iter+1) % 50 == 0 or iter == (args.epoch-1):        
+            model.save_weights(args.checkpoint_dir, model.global_step, write_meta_graph=False)
     logging.info("[!] test started") 
-    dataset = loader.read_data_path(args.data_path, name=args.data_name)
+    dataset = loader.read_data_path(args.data_path_t, name=args.data_name)
     
     for i, data in enumerate(dataset):
         if os.path.exists('./test_result'):
@@ -99,7 +99,6 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='')
     
-    parser.add_argument('-c', '--conf', type=str, default='configs/config.json')
     parser.add_argument('--iter_gen', type=int, default=1)
     parser.add_argument('--iter_disc', type=int, default=5)
     parser.add_argument('--batch_num', type=int, default=1)
@@ -113,8 +112,9 @@ if __name__ == '__main__':
     parser.add_argument('--data_name', type=str, default='GOPRO')
 
     parser.add_argument('--resize_or_crop', type=str, default='resize')
-    parser.add_argument('--img_x', type=int, default=256)
-    parser.add_argument('--img_y', type=int, default=256)
+    parser.add_argument('--img_h', type=int, default=256)
+    parser.add_argument('--img_w', type=int, default=256)
+    parser.add_argument('--img_c', type=int, default=3)
 
     parser.add_argument('--is_training', action='store_true')
     parser.add_argument('--debug', action='store_true')
