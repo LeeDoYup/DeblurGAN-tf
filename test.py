@@ -65,4 +65,4 @@ if __name__ == '__main__':
     logging.basicConfig(level=level, format=log_format, stream=sys.stderr)
     logging.getLogger("DeblurGAN_TEST.*").setLevel(level)
 
-    main(args)
+    test(args)
