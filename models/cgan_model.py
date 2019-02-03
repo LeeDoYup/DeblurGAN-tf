@@ -25,8 +25,7 @@ class cgan(object):
     def create_input_placeholder(self):
         self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='blur_img'),
             'real_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='real_img'),
-            'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='gen_img'),
-            'x_hat': tf.placeholder(dtype=tf.float32, shape=image_shape, name='x_hat')
+            'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='gen_img')
             }
         self.learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
         print("[*] Placeholders are created")
@@ -40,10 +39,14 @@ class cgan(object):
 
         #if test mode, only generator is used.
         if self.args.is_training:
-            self.D = discriminator(tf.concat([self.input['gen_img'], self.input['real_img']], axis=0))
-            self.gt = tf.concat([tf.zeros([self.args.batch_num, 1]), tf.ones([self.args.batch_num,1])], axis=0)
-            self.D4G = discriminator(self.G)
-            self.D_gp = discriminator(self.input['x_hat'])
+            self.D = discriminator(tf.concat([self.G, self.input['real_img']], axis=0))
+            #self.D = discriminator(tf.concat([self.input['gen_img'], self.input['real_img']], axis=0))
+            self.gt = np.concatenate([np.zeros([self.args.batch_num, 1]), np.ones([self.args.batch_num, 1])], axis=)
+            #self.gt = tf.concat([tf.zeros([self.args.batch_num, 1]), tf.ones([self.args.batch_num,1])], axis=0)
+            #self.D4G = discriminator(self.G)
+            self.x_hat = get_x_hat(self.G, self.input(['real_img'], args.batch_num))
+            self.D_gp = discriminator(self.x_hat)
+
             self.create_loss()
             t_vars = tf.trainable_variables() 
             self.g_vars = [var for var in t_vars if 'generator' in var.name]
@@ -54,23 +57,17 @@ class cgan(object):
         print(self.g_vars, self.d_vars)
         self.saver = tf.train.Saver()
         print("[*] C_GAN model build was completed")
-        #loggi
         vars = (tf.trainable_variables())
-        #vars = tf.global_variables_initializer()
         #for var in vars: print(var)
 
-    def run_optim_G(self, feed_dict, with_loss=True, with_out=False):
-        _, loss_G, adv_loss, perceptual_loss, G_out = self.sess.run(
-            [self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss, self.G],
+    def run_optim_G(self, feed_dict, with_loss=True):
+        _, loss_G, adv_loss, perceptual_loss = self.sess.run(
+            [self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss],
             feed_dict=feed_dict)
         #logging
 
-        if with_loss and with_out:
-            return loss_G, adv_loss, perceptual_loss, G_out
-        elif with_loss:
+        if with_loss:
             return loss_G, adv_loss, perceptual_loss
-        elif with_out:
-            G_out
         else:
             return
     def G_output(self, feed_dict):
@@ -79,14 +76,10 @@ class cgan(object):
     def D_output(self, feed_dict):
         return self.sess.run(self.D, feed_dict=feed_dict)
     
-    def D4G_output(self, feed_dict):
-        return self.sess.run(self.D4G, feed_dict=feed_dict)
-    
     def run_optim_D(self, feed_dict, with_loss=True):
         #D_ = self.D__output(feed_dict=feed_dict)
         _, loss_D= self.sess.run([self.optim_D, self.loss_D],
             feed_dict=feed_dict)
-        #logging
 
         if with_loss:
             return loss_D
@@ -95,14 +88,12 @@ class cgan(object):
 
 
     def create_loss(self, regularizer = 100.):
-        self.adv_loss = adv_loss(self.D4G)
+        self.adv_loss = adv_loss(self.D)
         self.perceptual_loss = perceptual_loss(self.G, self.input['real_img']) #vgg19 feature have to be calculated
         
         self.loss_G = self.adv_loss + regularizer * self.perceptual_loss
-        #self.loss_D = wasserstein_loss(self.D_, self.input['y'])
-        self.loss_D = wasserstein_gp_loss(self.D, self.gt,self.D_gp, self.input['x_hat'])
+        self.loss_D = wasserstein_gp_loss(self.D, self.gt,self.D_gp, self.x_hat)
         print(" [*] loss functions are created")
-        #logging
 
 
     def save_weights(self, checkpoint_dir, step):

@@ -27,8 +27,8 @@ def linear_decay(initial=0.0001, step=0, start_step=150, end_step=300):
 
 def main(args):
     #config = json.load(open(args.conf), 'r')
-    #assert batch_num == 
     #assume there is a batch data pair:
+
     #dataset = data_loader.load_data(args.data_path) #have te be developed
     dataset = loader.read_data_path(args.data_path, name=args.data_name)
     #dataset = [num_dataset, ]
@@ -46,52 +46,37 @@ def main(args):
             blur_img, real_img = loader.read_image_pair(data, 
                                     resize_or_crop = args.resize_or_crop, 
                                     image_size=(args.img_x, args.img_y))
+
             start_time = time.time()
-            '''
+            
             logging.info("[!] Generator Optimization Start")
             #for j in range(args.iter_gen):
-            if i % 5 == 0 :    
-                feed_dict_G = {model.input['blur_img']: blur_img,
-                        model.input['real_img']: real_img,
-                        model.learning_rate: learning_rate}
-                
-                loss_G, adv_loss, perceptual_loss, G_out = model.run_optim_G(feed_dict=feed_dict_G, 
-                                                                with_loss=True, with_out=True)
-                logging.info('%d epoch,  %d batch, Generator Loss:  %f, add loss: %f, perceptual_loss: %f', iter, i, loss_G, adv_loss, perceptual_loss)
-                batch_loss_G +=loss_G
-                #logging: time, loss
-            
-             
-            #Ready for Training Discriminator
-            
-            feed_dict_G = {model.input['blur_img']: blur_img}
-            G_out = model.G_output(feed_dict=feed_dict_G)
-            x_hat = model.sess.run(get_x_hat(G_out, real_img, args.batch_num))
-            
-            feed_dict_D = {model.input['gen_img']: G_out,
-                        model.input['real_img']: real_img,
-                        model.input['x_hat']: x_hat, 
+            feed_dict = {model.input['blur_img']: blur_img,\
+                        model.input['real_img']: real_img,\
                         model.learning_rate: learning_rate}
 
+            if i % 5 == 0 :    
+                loss_G, adv_loss, perceptual_loss = model.run_optim_G(feed_dict=feed_dict, 
+                                                                with_loss=True)
+                logging.info('%d epoch,  %d batch, Generator Loss:  %f, add loss: %f, perceptual_loss: %f',\
+                             iter, i, loss_G, adv_loss, perceptual_loss)
+                batch_loss_G +=loss_G
+            
+            #Ready for Training Discriminator
             logging.info("[!] Discriminator Optimization Start")
+            
             #for j in range(args.iter_disc):
             loss_D = model.run_optim_D(feed_dict=feed_dict_D, with_loss=True)
             print(loss_D)
             batch_loss_D += loss_D
-                #logging: time, loss 
             logging.info('%d epoch,  %d  batch, Discriminator  Loss:  %f', iter, i, loss_D)
 
             batch_time = time.time() - start_time
-            #logging
-            '''
-            if (np.nan in real_img) or (np.nan in blur_img):
-                print('nop'*100)
-        print('bye bye')
-        return 
+            print("Time for training a batch: ", batch_time)
+            
         batch_loss_G = batch_loss_G /(num_batch / args.iter_gen)
         batch_loss_D = batch_loss_D /(num_batch / args.iter_disc)
         logging.info("%d iter's Average Batch Loss:: G_Loss: %f, D_Loss: %f", iter, batch_loss_G, batch_loss_D)
-        #logging
 
         if (iter+1) % 30 == 0 or iter == (args.epoch-1):        
             model.save_weights(args.checkpoint_dir, iter+1)
@@ -99,13 +84,15 @@ def main(args):
     dataset = loader.read_data_path(args.data_path, name=args.data_name)
     
     for i, data in enumerate(dataset):
+        if os.path.exists('./test_result'):
+            os.mkdir('./test_result')
         blur_img, real_img = loader.read_image_pair(data, resize_or_crop = args.resize_or_crop,
                     image_size=(args.img_x, args.img_y))
         feed_dict_G = {model.input['blur_img']: blur_img}
         G_out = model.G_output(feed_dict=feed_dict_G)
-        cv2.imwrite(str(i)+'_blur.png', blur_img)
-        cv2.imwrite(str(i)+'_real.png', real_img)
-        cv2.imwrite(str(i)+'_gen.png', G_out)
+        cv2.imwrite('./test_result/'+str(i)+'_blur.png', blur_img)
+        cv2.imwrite('./test_result/'+str(i)+'_real.png', real_img)
+        cv2.imwrite('./test_result/'+str(i)+'_gen.png', G_out)
 
     logging.info("[*] test done")
 
@@ -143,10 +130,6 @@ if __name__ == '__main__':
 
     
     dataset = loader.read_data_path(args.data_path, name=args.data_name)
-    for i in range(370, 340):
-        print(hey)
-        print(dataset[i])
-    
     main(args)
 
 

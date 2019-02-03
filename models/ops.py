@@ -11,9 +11,9 @@ def concat(tensors, axis, *args, **kwargs):
 
 def norm_layer(input, ntype='instance', **kargs):
   if ntype == 'instance':
-    n_layer = tf.contrib.layers.instance_norm(input)#, kargs)
+    n_layer = tf.contrib.layers.instance_norm(input)
   elif ntype == 'batch':
-    n_layer = tf.contrib.layers.batch_norm(input)#, kargs)
+    n_layer = tf.contrib.layers.batch_norm(input)
   else:
     raise NotImplementedError('normalization layer [%s] is not found' % ntype)
   return n_layer
@@ -149,8 +149,8 @@ def generator(input, ngf=64, num_block=9, ntype='instance'):
       # reflection 2d
       x = conv2d(x, 3, kernel_h=7, stride_h=1, padding='SAME') #Valid
       x = tf.nn.tanh(x)
-
-    output = tf.add(x, input)/2.0
+      output = tf.add(x, input)/2.0
+      
     return output
 
 
