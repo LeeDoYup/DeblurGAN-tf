@@ -6,6 +6,10 @@ import cv2
 import glob
 import logging
 
+def read_data_path_custom(data_path, image_type='png'):
+    image_names = '*.'+image_type
+    names = glob.glob(os.path.join(data_path, image_names))
+    return names
 
 def read_data_path(data_path, name='GOPRO', image_type='png'):
     dir_list = [dir for dir in glob.glob(data_path+'/*') if os.path.isdir(dir)]
@@ -28,8 +32,7 @@ def dir_image_pair(dir_path, image_type='png'):
     assert len(blur_image_pathes) == len(real_image_pathes)
     pair_path = zip(blur_image_pathes, real_image_pathes)
     iter_pair_path = pair_path #for iteration
-    #print(list(pair_path))
-    #print(list(pair_path)V)
+    
     result = list(pair_path)
     
     for blur, real in iter_pair_path:
@@ -65,13 +68,22 @@ def read_image_pair(pair_path, resize_or_crop=None, image_size=(256,256)):
     image_real = np.array(image_real, dtype=np.float32)
     return image_blur, image_real
 
-def read_image(path):
+def read_image(path, resize_or_crop=None, image_size=(256,256)):
     image = cv2.imread(path, cv2.IMREAD_COLOR)
     image = image/255.0
-    
-    image = cv2.resize(image, (256,256), interpolation=cv2.INTER_AREA)
+
+    assert resize_or_crop != None
+    assert image_size != None
+
+    if resize_or_crop == 'resize':
+        image = cv2.resize(image, image_size, interpolation=cv2.INTER_AREA)
+    elif:
+        resize_or_crop == 'crop':
+        image = cv2.crop(image, image_size)
+
     if np.size(np.shape(image)) == 3: 
         image = np.expand_dims(image, axis=0)
+
     image = np.array(image, dtype=np.float32)
     return image
 
