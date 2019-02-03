@@ -46,9 +46,9 @@ def dir_image_pair(dir_path, image_type='png'):
 
 def read_image_pair(pair_path, resize_or_crop=None, image_size=(256,256)):
     image_blur = cv2.imread(pair_path[0], cv2.IMREAD_COLOR)
-    image_blur = image_blur / 255.0
+    image_blur = image_blur / 255.0 * 2.0 - 1.0
     image_real = cv2.imread(pair_path[1], cv2.IMREAD_COLOR)
-    image_real = image_real / 255.0
+    image_real = image_real / 255.0 * 2.0 - 1.0
 
     if resize_or_crop != None: 
         assert image_size != None
@@ -56,10 +56,12 @@ def read_image_pair(pair_path, resize_or_crop=None, image_size=(256,256)):
     if resize_or_crop == 'resize':
         image_blur = cv2.resize(image_blur, image_size, interpolation=cv2.INTER_AREA)
         image_real = cv2.resize(image_real, image_size, interpolation=cv2.INTER_AREA)
-
-    if resize_or_crop == 'crop':
+    elif resize_or_crop == 'crop':
         image_blur = cv2.crop(image_blur, image_size)
         image_real = cv2.crop(image_real, image_size)
+    else:
+        raise
+
     if np.size(np.shape(image_blur)) == 3:
         image_blur = np.expand_dims(image_blur, axis=0)
     if np.size(np.shape(image_real)) == 3:
@@ -70,15 +72,14 @@ def read_image_pair(pair_path, resize_or_crop=None, image_size=(256,256)):
 
 def read_image(path, resize_or_crop=None, image_size=(256,256)):
     image = cv2.imread(path, cv2.IMREAD_COLOR)
-    image = image/255.0
+    image = image/255.0 * 2.0 - 1.0
 
     assert resize_or_crop != None
     assert image_size != None
 
     if resize_or_crop == 'resize':
         image = cv2.resize(image, image_size, interpolation=cv2.INTER_AREA)
-    elif:
-        resize_or_crop == 'crop':
+    elif resize_or_crop == 'crop':
         image = cv2.crop(image, image_size)
 
     if np.size(np.shape(image)) == 3: 
