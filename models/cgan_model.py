@@ -20,16 +20,14 @@ class cgan(object):
         #BaseModel.initialize(opt)
         self.args = args
         self.sess = sess
-        #self.global_
+        self.image_op = []
 
     def create_input_placeholder(self):
         self.input = {'blur_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='blur_img'),
-            'real_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='real_img'),
-            'gen_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='gen_img')
+            'real_img': tf.placeholder(dtype=tf.float32, shape=image_shape, name='real_img')
             }
         self.learning_rate = tf.placeholder(dtype=tf.float32, name='learning_rate')
         print("[*] Placeholders are created")
-        #logging
 
 
     def build_model(self):
@@ -40,36 +38,41 @@ class cgan(object):
         #if test mode, only generator is used.
         if self.args.is_training:
             self.D = discriminator(tf.concat([self.G, self.input['real_img']], axis=0))
-            #self.gt = np.concatenate([np.zeros([self.args.batch_num, 1]), np.ones([self.args.batch_num, 1])], axis=0)
-            #self.gt = np.array(self.gt, dtype=np.float64)
             self.gt = tf.concat([tf.zeros([self.args.batch_num, 1]), tf.ones([self.args.batch_num,1])], axis=0)
-            
             self.x_hat = get_x_hat(self.G, self.input['real_img'], self.args.batch_num)
             self.D_gp = discriminator(self.x_hat)
 
             self.create_loss()
+
             t_vars = tf.trainable_variables() 
             self.g_vars = [var for var in t_vars if 'generator' in var.name]
             self.d_vars = [var for var in t_vars if 'disc' in var.name]
+
             self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G, var_list=self.g_vars)
             self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D, var_list=self.d_vars)
         
         self.saver = tf.train.Saver()
         print("[*] C_GAN model build was completed")
-        self.writer = tf.summary.FileWriter('./tf_graph', self.sess.graph)
+        self.writer = tf.summary.FileWriter(self.args.summary_dir, self.sess.graph)
         vars = (tf.trainable_variables())
         for var in vars: print(var)
 
-    def run_optim_G(self, feed_dict, with_loss=True):
-        _, loss_G, adv_loss, perceptual_loss = self.sess.run(
-            [self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss],
-            feed_dict=feed_dict)
-        #logging
+        image_op = [tf.summary.image('GOPRO/blur_img', self.input['blur_img']),
+                    tf.summary.image('GOPRO/real_img', self.input['real_img']),
+                    tf.summary.image('GOPRO/pred_img', self.G)]
+        self.image_summary_op = tf.summary.merge(image_op)
 
+    def run_optim_G(self, feed_dict, with_loss=True):
+        summary, _, loss_G, adv_loss, perceptual_loss = self.sess.run(
+            [self.gen_summary_op, self.optim_G, self.loss_G, self.adv_loss, self.perceptual_loss],
+            feed_dict=feed_dict)
+
+        self.writer.add_summary(summary)
         if with_loss:
             return loss_G, adv_loss, perceptual_loss
         else:
             return
+
     def G_output(self, feed_dict):
         return self.sess.run(self.G, feed_dict=feed_dict)
 
@@ -78,14 +81,16 @@ class cgan(object):
     
     def run_optim_D(self, feed_dict, with_loss=True):
         #D_ = self.D__output(feed_dict=feed_dict)
-        _, loss_D= self.sess.run([self.optim_D, self.loss_D],
-            feed_dict=feed_dict)
+        summary, img_summary, _, loss_D = self.sess.run([self.disc_summary_op, self.image_summary_op,\
+                                            self.optim_D, self.loss_D],
+                                            feed_dict=feed_dict)
+        self.writer.add_summary(summary)
+        self.writer.add_summary(img_summary)
 
         if with_loss:
             return loss_D
         else:
             return
-
 
     def create_loss(self, regularizer = 100.):
         self.adv_loss = adv_loss(self.D)
@@ -93,8 +98,16 @@ class cgan(object):
         
         self.loss_G = self.adv_loss + regularizer * self.perceptual_loss
         self.loss_D = wasserstein_gp_loss(self.D, self.gt,self.D_gp, self.x_hat)
-        print(" [*] loss functions are created")
 
+        gen_summary = [tf.summary.scalar('loss/D/loss_D', self.loss_D)]
+        disc_summary = [tf.summary.scalar('loss/G/loss_G', self.loss_G),
+                        tf.summary.scalar('loss/G/adv_loss', self.adv_loss),
+                        tf.summary.scalar('loss/G/perceptual_loss', self.perceptual_loss)]
+
+        self.gen_summary_op = tf.summary.merge(gen_summary)
+        self.disc_summary_op = tf.summary.merge(disc_summary)
+
+        print(" [*] loss functions are created")
 
     def save_weights(self, checkpoint_dir, step):
         model_name = self.args.model_name #"DeblurGAN.model"

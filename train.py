@@ -67,7 +67,6 @@ def main(args):
             
             #for j in range(args.iter_disc):
             loss_D = model.run_optim_D(feed_dict=feed_dict, with_loss=True)
-            print(loss_D)
             batch_loss_D += loss_D
             logging.info('%d epoch,  %d  batch, Discriminator  Loss:  %f', iter, i, loss_D)
 
