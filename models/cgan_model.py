@@ -36,10 +36,13 @@ class cgan(object):
 
         #if custom-test mode, only generator is used.
         try:
-            if self.args.is_test: return
-        
+            if self.args.is_test:
+                return
+        except Exception as e:
+            print("[*] Training model creation start")
+
         self.D = discriminator(tf.concat([self.G, self.input['real_img']], axis=0))
-        self.gt = tf.concat([tf.zeros([self.args.batch_num, 1]), tf.ones([self.args.batch_num,1])], axis=0)
+        self.gt = tf.concat([-1.0*tf.ones([self.args.batch_num, 1]), tf.ones([self.args.batch_num,1])], axis=0)
         self.x_hat = get_x_hat(self.G, self.input['real_img'], self.args.batch_num)
         self.D_gp = discriminator(self.x_hat)
 
@@ -82,14 +85,15 @@ class cgan(object):
     
     def run_optim_D(self, feed_dict, with_loss=True):
         #D_ = self.D__output(feed_dict=feed_dict)
-        summary, img_summary, _, loss_D, step = self.sess.run([self.disc_summary_op, self.image_summary_op,\
-                                            self.optim_D, self.loss_D, self.global_step],
+        summary, img_summary, _, loss_D, loss_disc, loss_gp, step = self.sess.run([self.disc_summary_op, self.image_summary_op,\
+                                            self.optim_D, self.loss_D, \
+                                            self.loss_disc, self.loss_gp, self.global_step],
                                             feed_dict=feed_dict)
         self.writer.add_summary(summary, step)
         self.writer.add_summary(img_summary)
 
         if with_loss:
-            return loss_D
+            return loss_D, loss_disc, loss_gp
         else:
             return
 
@@ -98,12 +102,15 @@ class cgan(object):
         self.perceptual_loss = perceptual_loss(self.G, self.input['real_img']) #vgg19 feature have to be calculated
         
         self.loss_G = self.adv_loss + regularizer * self.perceptual_loss
-        self.loss_D = wasserstein_gp_loss(self.D, self.gt,self.D_gp, self.x_hat)
+        self.loss_disc, self.loss_gp = wasserstein_gp_loss(self.D, self.gt, self.D_gp, self.x_hat)
+        self.loss_D = self.loss_disc + self.loss_gp
 
-        gen_summary = [tf.summary.scalar('loss/D/loss_D', self.loss_D)]
-        disc_summary = [tf.summary.scalar('loss/G/loss_G', tf.reduce_mean(self.loss_G)),
-                        tf.summary.scalar('loss/G/adv_loss', tf.reduce_mean(self.adv_loss)),
-                        tf.summary.scalar('loss/G/perceptual_loss', tf.reduce_mean(self.perceptual_loss))]
+        gen_summary = [tf.summary.scalar('loss_D', self.loss_D),
+                       tf.summary.scalar('loss_D/disc_loss', self.loss_disc),
+                       tf.summary.scalar('loss_D/gp_loss', self.loss_gp)]
+        disc_summary = [tf.summary.scalar('loss_G', tf.reduce_mean(self.loss_G)),
+                        tf.summary.scalar('loss_G/adv_loss', tf.reduce_mean(self.adv_loss)),
+                        tf.summary.scalar('loss_G/perceptual_loss', tf.reduce_mean(self.perceptual_loss))]
 
         self.gen_summary_op = tf.summary.merge(gen_summary)
         self.disc_summary_op = tf.summary.merge(disc_summary)
