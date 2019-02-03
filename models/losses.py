@@ -26,12 +26,11 @@ def l2_loss(gen_img, real_img):
 
 
 def wasserstein_loss(gen_prob, real_prob, with_gp=True, d_x_hat=None):
-  loss_fake = tf.nn.sigmoid_cross_entropy_with_logits(logits=gen_prob+0.0001, labels=tf.zeros_like(gen_prob))
-  loss_real = tf.nn.sigmoid_cross_entropy_with_logits(logits=real_prob+0.0001, labels=tf.ones_like(real_prob))
+  loss_fake = tf.nn.sigmoid_cross_entropy_with_logits(logits=gen_prob+1e-8, labels=tf.zeros_like(gen_prob))
+  loss_real = tf.nn.sigmoid_cross_entropy_with_logits(logits=real_prob+1e-8, labels=tf.ones_like(real_prob))
   loss_D = loss_fake + loss_real
     
   return tf.reduce_sum(loss_D)
-  #return tf.reduce_sum(real_prob*gen_prob)
 
 def wasserstein_gp_loss(prob, gt, d_gp, x_hat):
   loss_D = tf.nn.sigmoid_cross_entropy_with_logits(logits=prob, labels=gt)
@@ -39,7 +38,7 @@ def wasserstein_gp_loss(prob, gt, d_gp, x_hat):
   
   grad_d_x_hat = tf.gradients(d_gp, [x_hat])[0]
   red_idx = list(range(1, x_hat.shape.ndims))
-  slopes = tf.sqrt(tf.reduce_sum(tf.square(grad_d_x_hat), reduction_indices=red_idx))
+  slopes = tf.sqrt(1e-8+tf.reduce_sum(tf.square(grad_d_x_hat), reduction_indices=red_idx))
   gradient_penalty = tf.reduce_mean((slopes - 1.0) ** 2)
   
   return loss_D + 10.0 * gradient_penalty
