@@ -5,6 +5,8 @@ This repository is tensorflow (tf) implementation of DeblurGAN.
 DeblurGAN removes blur filter in a image and make the image sharp, as follow:  
 <img src='assets/animation3.gif' width='400px'/> <img src='assets/animation4.gif' width='400px'/>
 
+We use tensorflow 1.7.0 and opencv-python 3.4.0.12 and only support CPU version or single GPU.
+
 ## First, Download GOPRO Dataset
 DeblurGAN model is trained using GOPRO dataset.  
 To train the model, download the dataset from website [download](https://drive.google.com/file/d/1H0PIXvJH4c40pk7ou6nAwoxuR4Qh_Sa2/view)   
