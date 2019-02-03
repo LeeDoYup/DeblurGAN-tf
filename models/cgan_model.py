@@ -40,11 +40,11 @@ class cgan(object):
         #if test mode, only generator is used.
         if self.args.is_training:
             self.D = discriminator(tf.concat([self.G, self.input['real_img']], axis=0))
-            #self.D = discriminator(tf.concat([self.input['gen_img'], self.input['real_img']], axis=0))
-            self.gt = np.concatenate([np.zeros([self.args.batch_num, 1]), np.ones([self.args.batch_num, 1])], axis=)
-            #self.gt = tf.concat([tf.zeros([self.args.batch_num, 1]), tf.ones([self.args.batch_num,1])], axis=0)
-            #self.D4G = discriminator(self.G)
-            self.x_hat = get_x_hat(self.G, self.input(['real_img'], args.batch_num))
+            #self.gt = np.concatenate([np.zeros([self.args.batch_num, 1]), np.ones([self.args.batch_num, 1])], axis=0)
+            #self.gt = np.array(self.gt, dtype=np.float64)
+            self.gt = tf.concat([tf.zeros([self.args.batch_num, 1]), tf.ones([self.args.batch_num,1])], axis=0)
+            
+            self.x_hat = get_x_hat(self.G, self.input['real_img'], self.args.batch_num)
             self.D_gp = discriminator(self.x_hat)
 
             self.create_loss()
@@ -54,11 +54,11 @@ class cgan(object):
             self.optim_G = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_G, var_list=self.g_vars)
             self.optim_D = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_D, var_list=self.d_vars)
         
-        print(self.g_vars, self.d_vars)
         self.saver = tf.train.Saver()
         print("[*] C_GAN model build was completed")
+        self.writer = tf.summary.FileWriter('./tf_graph', self.sess.graph)
         vars = (tf.trainable_variables())
-        #for var in vars: print(var)
+        for var in vars: print(var)
 
     def run_optim_G(self, feed_dict, with_loss=True):
         _, loss_G, adv_loss, perceptual_loss = self.sess.run(

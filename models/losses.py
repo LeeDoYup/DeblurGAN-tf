@@ -29,7 +29,7 @@ def wasserstein_loss(gen_prob, real_prob, with_gp=True, d_x_hat=None):
   return tf.reduce_sum(loss_D)
 
 def wasserstein_gp_loss(prob, gt, d_gp, x_hat):
-  loss_D = tf.reduce_maen(tf.nn.sigmoid_cross_entropy_with_logits(logits=prob, labels=gt))
+  loss_D = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=prob, labels=gt))
   
   grad_d_x_hat = tf.gradients(d_gp, [x_hat])[0]
   red_idx = list(range(1, x_hat.shape.ndims))

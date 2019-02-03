@@ -59,20 +59,20 @@ def main(args):
                 loss_G, adv_loss, perceptual_loss = model.run_optim_G(feed_dict=feed_dict, 
                                                                 with_loss=True)
                 logging.info('%d epoch,  %d batch, Generator Loss:  %f, add loss: %f, perceptual_loss: %f',\
-                             iter, i, loss_G, adv_loss, perceptual_loss)
+                             iter, i, np.mean(loss_G), np.mean(adv_loss), np.mean(perceptual_loss))
                 batch_loss_G +=loss_G
             
             #Ready for Training Discriminator
             logging.info("[!] Discriminator Optimization Start")
             
             #for j in range(args.iter_disc):
-            loss_D = model.run_optim_D(feed_dict=feed_dict_D, with_loss=True)
+            loss_D = model.run_optim_D(feed_dict=feed_dict, with_loss=True)
             print(loss_D)
             batch_loss_D += loss_D
             logging.info('%d epoch,  %d  batch, Discriminator  Loss:  %f', iter, i, loss_D)
 
             batch_time = time.time() - start_time
-            print("Time for training a batch: ", batch_time)
+            #print("Time for training a batch: ", batch_time)
             
         batch_loss_G = batch_loss_G /(num_batch / args.iter_gen)
         batch_loss_D = batch_loss_D /(num_batch / args.iter_disc)
