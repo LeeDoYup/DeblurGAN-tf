@@ -179,12 +179,12 @@ def discriminator(input,  ndf=64, num_layer=3, ntype='batch'):
       x = tf.contrib.layers.flatten(x)
       x = fc_layer(x, 1024, activation='tanh', name='fc1')
       x = fc_layer(x, 1, activation='linear', name='output')
-
     return x
 
-def get_x_hat(gen_img, real_img, batch_size=1):
-  ep = tf.random_uniform(shape=[batch_size, 1,1,1], minval=0.0, maxval=1.0)
-  result = real_img + ep * (gen_img - real_img)
+def get_x_hat(gen_img, real_img, batch_size=1, name='xhat'):
+  with tf.name_scope(name=name) as scope:
+    ep = tf.random_uniform(shape=[batch_size, 1,1,1], minval=0.0, maxval=1.0)
+    result = real_img + ep * (gen_img - real_img)
   return result
 
 if __name__ == '__main__':

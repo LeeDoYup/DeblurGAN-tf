@@ -38,44 +38,28 @@ def train(args):
     model.load_weights(args.checkpoint_dir)
      
     for iter in range(args.epoch):
-        batch_loss_G, batch_loss_D = 0.0 ,0.0
+        learning_rate = linear_decay(0.0001, iter)
         for i, data in enumerate(dataset):
-            learning_rate = linear_decay(0.0001, iter)
             blur_img, real_img = loader.read_image_pair(data, 
                                     resize_or_crop = args.resize_or_crop, 
                                     image_size=(args.img_h, args.img_w))
 
-            start_time = time.time()
-            
-            #logging.info("[!] Generator Optimization Start")
-
             feed_dict = {model.input['blur_img']: blur_img,\
                         model.input['real_img']: real_img,\
                         model.learning_rate: learning_rate}
-
+            
             if i % 5 == 0 :    
-                loss_G, adv_loss, perceptual_loss = model.run_optim_G(feed_dict=feed_dict, 
-                                                                with_loss=True)
+                loss_G, adv_loss, perceptual_loss = model.run_optim_G(feed_dict=feed_dict) 
                 logging.info('%d epoch,  %d batch, Generator Loss:  %f, add loss: %f, perceptual_loss: %f',\
-                             iter, i, np.mean(loss_G), np.mean(adv_loss), np.mean(perceptual_loss))
-                batch_loss_G +=loss_G
+                             iter, i, loss_G, adv_loss, perceptual_loss)
             
             #Ready for Training Discriminator
-            #logging.info("[!] Discriminator Optimization Start")
-            
-            #for j in range(args.iter_disc):
-            loss_D, loss_disc, loss_gp  = model.run_optim_D(feed_dict=feed_dict, with_loss=True)
-            batch_loss_D += loss_D
+            loss_D, loss_disc, loss_gp  = model.run_optim_D(feed_dict=feed_dict, with_image=args.tf_image_monitor)
             logging.info('%d epoch,  %d  batch, Discriminator  Loss:  %f, loss_disc:  %f, gp_loss: %f', iter, i, loss_D, loss_disc, loss_gp)
-
-            batch_time = time.time() - start_time
             
-        batch_loss_G = batch_loss_G /(num_batch / args.iter_gen)
-        batch_loss_D = batch_loss_D /(num_batch / args.iter_disc)
-        logging.info("%d iter's Average Batch Loss:: G_Loss: %f, D_Loss: %f", iter, batch_loss_G, batch_loss_D)
-
         if (iter+1) % 50 == 0 or iter == (args.epoch-1):        
-            model.save_weights(args.checkpoint_dir, model.global_step, write_meta_graph=False)
+            model.save_weights(args.checkpoint_dir, model.global_step)
+    
     logging.info("[!] test started") 
     dataset = loader.read_data_path(args.data_path_test, name=args.data_name)
     
@@ -107,6 +91,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_name', type=str, default='DeblurGAN.model')
     parser.add_argument('--summary_dir', type=str, default='./summaries/')
     parser.add_argument('--data_name', type=str, default='GOPRO')
+    parser.add_argument('--tf_image_monitor', type=bool, default=False)
 
     parser.add_argument('--resize_or_crop', type=str, default='resize')
     parser.add_argument('--img_h', type=int, default=256)
@@ -114,7 +99,6 @@ if __name__ == '__main__':
     parser.add_argument('--img_c', type=int, default=3)
 
     parser.add_argument('--debug', action='store_true')
-
      
     args = parser.parse_args()
 
