@@ -48,13 +48,15 @@ def train(args):
                         model.input['real_img']: real_img,\
                         model.learning_rate: learning_rate}
             
-            if i % 5 == 0 :    
-                loss_G, adv_loss, perceptual_loss = model.run_optim_G(feed_dict=feed_dict) 
-                logging.info('%d epoch,  %d batch, Generator Loss:  %f, add loss: %f, perceptual_loss: %f',\
+               
+            loss_G, adv_loss, perceptual_loss = model.run_optim_G(feed_dict=feed_dict) 
+            logging.info('%d epoch,  %d batch, Generator Loss:  %f, add loss: %f, perceptual_loss: %f',\
                              iter, i, loss_G, adv_loss, perceptual_loss)
-            
+
             #Ready for Training Discriminator
-            loss_D, loss_disc, loss_gp  = model.run_optim_D(feed_dict=feed_dict, with_image=args.tf_image_monitor)
+            for _ in range(args.iter_disc):
+                loss_D, loss_disc, loss_gp  = model.run_optim_D(feed_dict=feed_dict, with_image=args.tf_image_monitor)
+                
             logging.info('%d epoch,  %d  batch, Discriminator  Loss:  %f, loss_disc:  %f, gp_loss: %f', iter, i, loss_D, loss_disc, loss_gp)
             
         if (iter+1) % 50 == 0 or iter == (args.epoch-1):        
