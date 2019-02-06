@@ -41,7 +41,6 @@ def dir_image_pair(dir_path, image_type='png'):
         if name1 != name2:
             result.remove((blur, real))
             print("blur: %s, real: %s pair was removed in training data"%(name1, name2))
-            #logging 
     return result 
 
 def read_image_pair(pair_path, resize_or_crop=None, image_size=(256,256)):

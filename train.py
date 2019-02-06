@@ -8,6 +8,7 @@ import json
 
 import tensorflow as tf 
 import numpy as np 
+import cv2
 
 import data.data_loader as loader
 from models.cgan_model import cgan
