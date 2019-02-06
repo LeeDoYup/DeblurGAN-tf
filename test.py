@@ -7,6 +7,7 @@ import logging
 import js
 import tesorflow as tf 
 import numpy as np 
+import cv2
 from data.data_loader import *
 from model.cgan_model import cgan 
 
