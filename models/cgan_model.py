@@ -14,8 +14,8 @@ from models.losses import *
 class cgan(object):
     def name(self):
         return 'cgan'
+
     def __init__(self, sess, args):
-        #BaseModel.initialize(opt)
         self.args = args
         self.sess = sess
         self.image_op = []

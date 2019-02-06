@@ -8,8 +8,7 @@ def adv_loss(sigm, name='adv_loss'):
   args: shape = [batch_size, 1]: it means the discriminator predict the sample is real.
   '''
   with tf.name_scope(name=name) as scope:
-    loss_fake = sigm
-    #loss_fake = tf.nn.sigmoid_cross_entropy_with_logits(logits=sigm, labels = tf.zeros_like(sigm))
+    loss_fake = sigm[0]
     return tf.reduce_mean(-1.0 * loss_fake)
 
 def perceptual_loss(gen_img, real_img, name='perceptual_loss'):
