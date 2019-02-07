@@ -67,7 +67,7 @@ def train(args):
     dataset = loader.read_data_path(args.data_path_test, name=args.data_name)
     
     for i, data in enumerate(dataset):
-        if os.path.exists('./test_result'):
+        if not os.path.exists('./test_result'):
             os.mkdir('./test_result')
         blur_img, real_img = loader.read_image_pair(data, resize_or_crop = args.resize_or_crop,
                     image_size=(args.img_h, args.img_w))
@@ -76,7 +76,7 @@ def train(args):
         cv2.imwrite('./test_result/'+str(i)+'_blur.png', (blur_img+1.0)/2.0 *255.)
         cv2.imwrite('./test_result/'+str(i)+'_real.png', (real_img+1.0)/2.0 *255.)
         cv2.imwrite('./test_result/'+str(i)+'_gen.png', (G_out+1.0)/2.0*255.)
-
+        logging.info("%Deblur Image is saved (%d/%d) ", i, len(dataset))
     logging.info("[*] test done")
 
 if __name__ == '__main__':
