@@ -73,10 +73,10 @@ def train(args):
                     image_size=(args.img_h, args.img_w))
         feed_dict_G = {model.input['blur_img']: blur_img}
         G_out = model.G_output(feed_dict=feed_dict_G)
-        cv2.imwrite('./test_result/'+str(i)+'_blur.png', (blur_img+1.0)/2.0 *255.)
-        cv2.imwrite('./test_result/'+str(i)+'_real.png', (real_img+1.0)/2.0 *255.)
-        cv2.imwrite('./test_result/'+str(i)+'_gen.png', (G_out+1.0)/2.0*255.)
-        logging.info("%Deblur Image is saved (%d/%d) ", i, len(dataset))
+        cv2.imwrite('./test_result/'+str(i)+'_blur.png', (blur_img[0]+1.0)/2.0 *255.)
+        cv2.imwrite('./test_result/'+str(i)+'_real.png', (real_img[0]+1.0)/2.0 *255.)
+        cv2.imwrite('./test_result/'+str(i)+'_gen.png', (G_out[0]+1.0)/2.0*255.)
+        logging.info("Deblur Image is saved (%d/%d) ", i, len(dataset))
     logging.info("[*] test done")
 
 if __name__ == '__main__':
