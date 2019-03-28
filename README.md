@@ -1,4 +1,5 @@
 # DeblurGAN-tf
+**I checked that the results are not reproduced, issue #19, and the issue is resolving**
 DeblurGAN: Blind Motion Deblurring Using Conditional Adversarial Networks [paper](https://arxiv.org/abs/1711.07064)  
 This repository is tensorflow (tf) implementation of DeblurGAN.
 
