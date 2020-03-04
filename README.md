@@ -1,5 +1,5 @@
 # DeblurGAN-tf
-**I checked that the results are not reproduced, issue #19, and the issue is resolving**
+
 DeblurGAN: Blind Motion Deblurring Using Conditional Adversarial Networks [paper](https://arxiv.org/abs/1711.07064)  
 This repository is tensorflow (tf) implementation of DeblurGAN.
 
@@ -7,6 +7,10 @@ DeblurGAN removes blur filter in a image and make the image sharp, as follow:
 <img src='assets/animation3.gif' width='400px'/> <img src='assets/animation4.gif' width='400px'/>
 
 We use tensorflow 1.7.0 and opencv-python 3.4.0.12 and only support CPU version or single GPU.
+
+## Notice
+- I had reproduce the results, but someone mentioned they didn't have satisfactory results. (If you also reproduce, please share experience for everyone.)
+- DeblurGAN-v2 is launched (in ICCV'19). [code](https://github.com/TAMU-VITA/DeblurGANv2)
 
 ## First, Download GOPRO Dataset
 DeblurGAN model is trained using GOPRO dataset.  
